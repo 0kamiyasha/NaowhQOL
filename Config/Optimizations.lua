@@ -21,17 +21,17 @@ local OPTIMAL_FPS_CVARS = {
         category = "render",
     },
     {
-        cvar = "gxVSync",
+        cvar = "VSync",
         optimal = "0",
         name = "VSync",
         desc = "Disabled for maximum FPS",
         category = "render",
     },
     {
-        cvar = "GxMaxFrameLatency",
-        optimal = "2",
-        name = "Max Frame Latency",
-        desc = "Low latency (2)",
+        cvar = "MSAAQuality",
+        optimal = "0",
+        name = "Multisampling",
+        desc = "None",
         category = "render",
     },
     {
@@ -144,6 +144,13 @@ local OPTIMAL_FPS_CVARS = {
     },
     
     -- Advanced Settings
+    {
+        cvar = "GxMaxFrameLatency",
+        optimal = "2",
+        name = "Triple Buffering",
+        desc = "Disabled",
+        category = "advanced",
+    },
     {
         cvar = "TextureFilteringMode",
         optimal = "5",
@@ -459,10 +466,24 @@ function ns:GetCVarStatus(cvar, optimal)
     elseif cvar == "maxFPSBk" or cvar == "targetFPS" then
         displayValue = current .. " FPS"
         displayOptimal = optimal .. " FPS"
-    elseif cvar == "useTargetFPS" or cvar == "gxVSync" or
-           cvar == "ffxVRS" or cvar == "graphicsProjectedTextures" then
+    elseif cvar == "useTargetFPS" or cvar == "VSync" or
+           cvar == "ffxVRS" or cvar == "graphicsProjectedTextures" or
+           cvar == "useMaxFPSBk" then
         displayValue = (current == "1" or current == "true") and "Enabled" or "Disabled"
         displayOptimal = (optimal == "1" or optimal == "true") and "Enabled" or "Disabled"
+    elseif cvar == "GxMaxFrameLatency" then
+        displayValue  = (currentNum == 3) and "Enabled" or "Disabled"
+        displayOptimal = (optimalNum == 3) and "Enabled" or "Disabled"
+    elseif cvar == "GxApi" then
+        local function apiLabel(v)
+            local u = string.upper(v or "")
+            if u == "D3D12" then return "DX12"
+            elseif u == "D3D11" then return "DX11"
+            elseif u == "OPENGL" then return "OpenGL"
+            else return "Auto" end
+        end
+        displayValue  = apiLabel(current)
+        displayOptimal = apiLabel(optimal)
     elseif cvar == "graphicsShadowQuality" then
         local L = {[1]="Low",[2]="Fair",[3]="Good",[4]="High",[5]="Ultra",[6]="Ultra High"}
         displayValue  = L[tonumber(current)] or current
@@ -496,7 +517,7 @@ function ns:GetCVarStatus(cvar, optimal)
         displayValue  = L[tonumber(current)] or current
         displayOptimal = L[tonumber(optimal)] or optimal
     elseif cvar == "shadowRt" then
-        local L = {[0]="Disabled",[1]="Low",[2]="High",[3]="Ultra"}
+        local L = {[0]="Disabled",[1]="Low",[2]="Good",[3]="High",[4]="Ultra"}
         displayValue  = L[tonumber(current)] or "Disabled"
         displayOptimal = L[tonumber(optimal)] or "Disabled"
     elseif cvar == "LowLatencyMode" then
@@ -508,9 +529,9 @@ function ns:GetCVarStatus(cvar, optimal)
         displayValue  = L[tonumber(current)] or "None"
         displayOptimal = L[tonumber(optimal)] or "None"
     elseif cvar == "MSAAQuality" then
-        local L = {[0]="Off",[1]="2x MSAA",[2]="4x MSAA",[3]="8x MSAA"}
-        displayValue  = L[tonumber(current)] or "Off"
-        displayOptimal = L[tonumber(optimal)] or "Off"
+        local L = {[0]="None",[1]="2x",[2]="4x (Color+Depth)",[3]="8x (Color+Depth)"}
+        displayValue  = L[tonumber(current)] or "None"
+        displayOptimal = L[tonumber(optimal)] or "None"
     elseif cvar == "TextureFilteringMode" then
         local L = {[0]="Bilinear",[1]="Trilinear",[2]="2x Aniso",[3]="4x Aniso",[4]="8x Aniso",[5]="16x Aniso"}
         displayValue  = L[tonumber(current)] or "Bilinear"
@@ -593,7 +614,7 @@ function ns:LowEndOptimization()
     SetCVar("shadowRt",                 "0")
     SetCVar("ffxVRS",                    "0")
     SetCVar("renderScale",               "0.75")
-    SetCVar("gxVSync",                   "0")
+    SetCVar("VSync",                   "0")
     SetCVar("maxFPSToggle",              "1")
     SetCVar("maxFPS",                    "60")
     SetCVar("GxApi",                     "D3D11")
@@ -637,64 +658,6 @@ function ns:RestorePreviousSettings()
     end)
 end
 
-function ns:UltraQualityOptimization()
-    SaveCurrentSettings()
-
-    local successCount, failCount = 0, 0
-
-    local ultraSettings = {
-        graphicsQuality             = "10",
-        graphicsTextureResolution   = "2",
-        graphicsProjectedTextures   = "2",
-        graphicsShadowQuality       = "6",
-        graphicsLiquidDetail        = "3",
-        graphicsParticleDensity     = "10",
-        graphicsSSAO                = "4",
-        graphicsDepthEffects        = "3",
-        graphicsComputeEffects      = "3",
-        graphicsOutlineMode         = "3",
-        graphicsSpellDensity        = "10",
-        graphicsViewDistance        = "10",
-        graphicsEnvironmentDetail   = "10",
-        graphicsGroundClutter       = "10",
-        graphicsTextureFiltering    = "5",
-        shadowRt                    = "3",
-        ffxAntiAliasingMode         = "4",
-        MSAAQuality                 = "2",
-        ffxVRS                      = "0",
-        LowLatencyMode              = "3",
-        physicsLevel                = "2",
-        renderScale                 = "1",
-        gxVSync                     = "0",
-        maxFPSToggle                = "0",
-        maxFPSBk                    = "30",
-        useMaxFPSBk                 = "1",
-        cameraShake                 = "1",
-        ResampleSharpness           = "0.5",
-        GxApi                       = "D3D12",
-    }
-
-    for cvar, value in pairs(ultraSettings) do
-        if pcall(SetCVar, cvar, value) then
-            successCount = successCount + 1
-        else
-            failCount = failCount + 1
-        end
-    end
-
-    print(W.Colorize("ULTRA SETTINGS:", C.BLUE) .. " "
-        .. W.Colorize(string_format("Applied %d settings! Reloading UI...", successCount), C.SUCCESS))
-
-    if failCount > 0 then
-        print(W.Colorize("Note:", C.ORANGE) .. " "
-            .. W.Colorize(string_format("%d settings could not be applied.", failCount), C.GRAY))
-    end
-
-    C_Timer.After(0.5, function()
-        StaticPopup_Show("NAOWH_QOL_FPS_RELOAD")
-    end)
-end
-
 -- Slash command for sharpening toggle
 SLASH_NAOWHSHARP1 = "/naowhsharp"
 SlashCmdList["NAOWHSHARP"] = function()
@@ -726,7 +689,7 @@ end
 
 local function CreateSectionButton(parent, col, row, text)
     local btnW, btnH = 190, 32
-    local x = (col == 2) and 120 or -120
+    local x = (col == 2) and 120 or (col == 1) and -120 or 0
     local y = -5 - ((row - 1) * 42)
     local btn = W:CreateButton(parent, { text = text, width = btnW, height = btnH })
     btn:SetPoint("TOP", parent, "TOP", x, y)
@@ -899,7 +862,7 @@ function ns:InitOptOptions()
         })
 
         -- Create Revert button first (will be referenced by other buttons)
-        local revertBtn = CreateSectionButton(presetsContent, 1, 2,
+        local revertBtn = CreateSectionButton(presetsContent, 0, 2,
             W.Colorize("Revert ", C.GRAY) .. "Settings")
         
         -- Check if settings were previously saved to enable/disable button
@@ -929,7 +892,7 @@ function ns:InitOptOptions()
             hasSavedSettings and "Click to restore" or "Apply optimization first"
         })
 
-        local fpsBtn = CreateSectionButton(presetsContent, 1, 1,
+        local fpsBtn = CreateSectionButton(presetsContent, 0, 1,
             W.Colorize("Optimal FPS ", C.ORANGE) .. "Settings")
         fpsBtn:SetScript("OnClick", function() 
             ns:ApplyFPSOptimization()
@@ -944,21 +907,6 @@ function ns:InitOptOptions()
             "Shadows balanced", "Particles optimized",
             "Perfect for raids & M+",
             " ", "Requires UI Reload"
-        })
-
-        local qualityBtn = CreateSectionButton(presetsContent, 2, 1,
-            W.Colorize("Ultra ", C.BLUE) .. "Settings")
-        qualityBtn:SetScript("OnClick", function() 
-            ns:UltraQualityOptimization()
-            -- Enable revert button after applying optimization
-            revertBtn:Enable()
-            revertBtn:SetAlpha(1)
-            revertBtn:SetText(W.Colorize("Revert ", C.ORANGE) .. "Settings")
-        end)
-        AddTooltip(qualityBtn, "Ultra Settings", "Maximum graphics quality:", {
-            "All settings maxed out", "DirectX 12 optimized",
-            "SSAO at maximum", "Full effects enabled",
-            "For high-end PCs & content creation"
         })
 
         presetsContent:SetHeight(87)
