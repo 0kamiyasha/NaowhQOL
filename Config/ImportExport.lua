@@ -334,22 +334,23 @@ function ns:InitImportExport()
         renameBtn:SetPoint("LEFT", saveBtn, "RIGHT", 4, 0)
         renameBtn:SetScript("OnClick", function()
             local current = ns.SettingsIO:GetActiveProfile()
-            if not NaowhQOL.profiles or not NaowhQOL.profiles[current] then
-                profileStatus:SetText("|cffff4444Save profile first|r")
-                return
-            end
             local dialog = StaticPopup_Show("NAOWH_QOL_PROFILE_NAME", "Rename profile '" .. current .. "' to:")
             if dialog then
                 dialog.data = {
                     default = current,
                     callback = function(newName)
-                        if ns.SettingsIO:RenameProfile(current, newName) then
+                        local ok, err = ns.SettingsIO:RenameProfile(current, newName)
+                        if ok then
                             RefreshProfileDropdown()
                             if RefreshSpecDropdowns then RefreshSpecDropdowns() end
                             UpdateProfileStatus()
                             profileStatus:SetText("|cff44ff44Renamed to: " .. newName .. "|r")
                         else
-                            profileStatus:SetText("|cffff4444Name already exists|r")
+                            if err == "exists" then
+                                profileStatus:SetText("|cffff4444Name already exists|r")
+                            else
+                                profileStatus:SetText("|cffff4444Rename failed|r")
+                            end
                         end
                     end
                 }
@@ -361,8 +362,9 @@ function ns:InitImportExport()
         deleteBtn:SetPoint("LEFT", renameBtn, "RIGHT", 4, 0)
         deleteBtn:SetScript("OnClick", function()
             local current = ns.SettingsIO:GetActiveProfile()
-            if not NaowhQOL.profiles or not NaowhQOL.profiles[current] then
-                profileStatus:SetText("|cffff4444No profile to delete|r")
+            local profiles = ns.SettingsIO:GetProfileList()
+            if #profiles <= 1 then
+                profileStatus:SetText("|cffff4444Cannot delete last profile|r")
                 return
             end
             local dialog = StaticPopup_Show("NAOWH_QOL_PROFILE_CONFIRM", "Delete profile '" .. current .. "'?")
@@ -388,9 +390,13 @@ function ns:InitImportExport()
                 dialog.data = {
                     default = "",
                     callback = function(name)
-                        if NaowhQOL.profiles and NaowhQOL.profiles[name] then
-                            profileStatus:SetText("|cffff4444Name already exists|r")
-                            return
+                        -- Check if profile already exists
+                        local profiles = ns.SettingsIO:GetProfileList()
+                        for _, pname in ipairs(profiles) do
+                            if pname == name then
+                                profileStatus:SetText("|cffff4444Name already exists|r")
+                                return
+                            end
                         end
                         ns.SettingsIO:CreateDefaultProfile(name)
                         RefreshProfileDropdown()
@@ -402,83 +408,55 @@ function ns:InitImportExport()
             end
         end)
 
-        -- Copy profile section
-        W:CreateSectionHeader(sc, "Copy Profile", -180)
+        -- Copy profile section (AceDB profiles are account-wide)
+        W:CreateSectionHeader(sc, "Copy Existing Profile", -180)
 
         local copyStatus = sc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         copyStatus:SetPoint("TOPLEFT", 35, -245)
         copyStatus:SetText("")
 
-        local selectedChar = nil
-
-        local charProfileDropdown = CreateDynamicDropdown(sc, {
-            width = 160,
-            placeholder = "Select Profile",
-            emptyText = "(Select character first)",
+        local copyFromDropdown = CreateDynamicDropdown(sc, {
+            width = 200,
+            placeholder = "Select Profile to Copy",
+            emptyText = "(No profiles available)",
         })
+        copyFromDropdown:SetPoint("TOPLEFT", 35, -218)
 
-        local charDropdown = CreateDynamicDropdown(sc, {
-            width = 160,
-            placeholder = "Select Character",
-            emptyText = "(No saved profiles)",
-            onSelect = function(charKey)
-                selectedChar = charKey
-                -- Refresh the profile dropdown for selected character
-                local profiles = ns.SettingsIO:GetCharacterProfiles(charKey)
-                local options = {}
-                for _, name in ipairs(profiles) do
-                    options[#options + 1] = { text = name, value = name }
-                end
-                charProfileDropdown:Refresh(options)
-                charProfileDropdown:SetText("Select Profile")
-                charProfileDropdown:SetSelectedValue(nil)
-            end
-        })
-        charDropdown:SetPoint("TOPLEFT", 35, -218)
-        charProfileDropdown:SetPoint("LEFT", charDropdown, "RIGHT", 8, 0)
-
-        local function RefreshCharProfileDropdown()
-            if not selectedChar then
-                charProfileDropdown:Refresh({})
-                charProfileDropdown:SetText("Select Profile")
-                return
-            end
-            local profiles = ns.SettingsIO:GetCharacterProfiles(selectedChar)
+        local function RefreshCopyFromDropdown()
+            local profiles = ns.SettingsIO:GetProfileList()
+            local currentProfile = ns.SettingsIO:GetActiveProfile()
             local options = {}
             for _, name in ipairs(profiles) do
-                options[#options + 1] = { text = name, value = name }
+                if name ~= currentProfile then
+                    options[#options + 1] = { text = name, value = name }
+                end
             end
-            charProfileDropdown:Refresh(options)
+            copyFromDropdown:Refresh(options)
+            copyFromDropdown:SetText("Select Profile to Copy")
+            copyFromDropdown:SetSelectedValue(nil)
         end
 
-        local function RefreshCharDropdown()
-            local chars = ns.SettingsIO:GetOtherCharacters()
-            local options = {}
-            for _, charKey in ipairs(chars) do
-                options[#options + 1] = { text = charKey, value = charKey }
-            end
-            charDropdown:Refresh(options)
-            charDropdown:SetText("Select Character")
-        end
-
-        local copyBtn = W:CreateButton(sc, { text = "Copy", width = 60, height = 24 })
-        copyBtn:SetPoint("LEFT", charProfileDropdown, "RIGHT", 8, 0)
+        local copyBtn = W:CreateButton(sc, { text = "Copy to Current", width = 110, height = 24 })
+        copyBtn:SetPoint("LEFT", copyFromDropdown, "RIGHT", 8, 0)
         copyBtn:SetScript("OnClick", function()
-            local charKey = charDropdown:GetSelectedValue()
-            local profileName = charProfileDropdown:GetSelectedValue()
-            if not charKey or not profileName then
-                copyStatus:SetText("|cffff4444Select character and profile|r")
+            local sourceProfile = copyFromDropdown:GetSelectedValue()
+            if not sourceProfile then
+                copyStatus:SetText("|cffff4444Select a profile to copy|r")
                 return
             end
-            local ok, err = ns.SettingsIO:CopyFromCharacter(charKey, profileName)
+            local ok, err = ns.SettingsIO:CopyProfile(sourceProfile)
             if ok then
-                copyStatus:SetText("|cff44ff44Copied from " .. charKey .. "|r")
+                copyStatus:SetText("|cff44ff44Copied settings from: " .. sourceProfile .. "|r")
                 RefreshProfileDropdown()
                 UpdateProfileStatus()
             else
                 copyStatus:SetText("|cffff4444" .. (err or "Copy failed") .. "|r")
             end
         end)
+
+        local copyNote = sc:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        copyNote:SetPoint("TOPLEFT", 35, -248)
+        copyNote:SetText("Profiles are shared across all characters")
 
         -- Spec Profile Swap Section
         W:CreateSectionHeader(sc, "Spec Profile Swap", -280)
@@ -554,7 +532,7 @@ function ns:InitImportExport()
         C_Timer.After(0.1, function()
             ns.SettingsIO:InitProfiles()
             RefreshProfileDropdown()
-            RefreshCharDropdown()
+            RefreshCopyFromDropdown()
             UpdateProfileStatus()
             BuildSpecRows()
             RefreshSpecDropdowns()

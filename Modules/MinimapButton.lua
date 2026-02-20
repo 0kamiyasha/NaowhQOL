@@ -37,8 +37,15 @@ local loader = CreateFrame("Frame")
 loader:RegisterEvent("ADDON_LOADED")
 loader:SetScript("OnEvent", function(self, event, name)
     if name == addonName then
-        NaowhQOL.minimapIcon = NaowhQOL.minimapIcon or {}
-        local db = NaowhQOL.minimapIcon
+        -- Use global storage for minimap icon (account-wide position)
+        local db
+        if ns.db and ns.db.global then
+            db = ns.db.global.minimapIcon
+        else
+            -- Fallback if AceDB not initialized yet
+            NaowhQOL.minimapIcon = NaowhQOL.minimapIcon or {}
+            db = NaowhQOL.minimapIcon
+        end
 
         if NaowhQOL.misc and NaowhQOL.misc.hideMinimapIcon then
             db.hide = true

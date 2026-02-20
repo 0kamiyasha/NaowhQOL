@@ -11,24 +11,25 @@ local function ColorizeText(text, color)
     return "|cff" .. color .. text .. "|r"
 end
 
+-- NaowhQOL will be set to point to ns.db.profile after AceDB init
 NaowhQOL = NaowhQOL or {}
 
 -- Session-only suppression flag (resets on reload)
 ns.notificationsSuppressed = false
 
 ns.DB = ns.DB or {}
-ns.DefaultConfig = {
-    config = {
-        posX = 0,
-        posY = 0,
-        autoRepair = false,
-        autoSell = false,
-        skinChar = true,
-        optimized = false,
-        combatNotify = true,
-        minimapButtonPos = 225,
-    }
-}
+
+-- Debug flag for migration logging (set to true to see migration output)
+local MIGRATION_DEBUG = false
+
+local function DebugPrint(msg)
+    if MIGRATION_DEBUG then
+        print("|cff00aaff[NaowhQOL]|r " .. msg)
+    end
+end
+
+-- AceDB library reference
+local AceDB = LibStub("AceDB-3.0")
 
 -- Apply default values to a settings table
 local function ApplyDefaults(target, defaults)
@@ -321,6 +322,171 @@ ns.ModuleDefaults = {
     coTank = CO_TANK_DEFAULTS,
 }
 
+-- AceDB defaults structure
+local aceDBDefaults = {
+    profile = {
+        -- Locale
+        locale = "enUS",
+
+        -- Config (UI state)
+        config = {
+            lastTab = nil,
+        },
+
+        -- Module settings
+        combatTimer = COMBAT_TIMER_DEFAULTS,
+        combatAlert = COMBAT_ALERT_DEFAULTS,
+        crosshair = CROSSHAIR_DEFAULTS,
+        combatLogger = {
+            enabled = false,
+            instances = {},
+        },
+        dragonriding = DRAGONRIDING_DEFAULTS,
+        buffTracker = BUFF_TRACKER_DEFAULTS,
+        gcdTracker = {
+            enabled = false, unlock = false, duration = 5, iconSize = 32,
+            direction = "RIGHT", spacing = 4, fadeStart = 0.5,
+            stackOverlapping = true,
+            point = "CENTER", x = 0, y = -100, combatOnly = false,
+            showInDungeon = true, showInRaid = true, showInArena = true,
+            showInBattleground = true, showInWorld = true,
+            blocklist = { [6603] = true },
+            timelineColorR = 0.01, timelineColorG = 0.56, timelineColorB = 0.91,
+            timelineHeight = 4,
+            downtimeSummaryEnabled = false,
+        },
+        stealthReminder = STEALTH_REMINDER_DEFAULTS,
+        movementAlert = MOVEMENT_ALERT_DEFAULTS,
+        rangeCheck = RANGE_CHECK_DEFAULTS,
+        emoteDetection = EMOTE_DETECTION_DEFAULTS,
+        focusCastBar = FOCUS_CAST_BAR_DEFAULTS,
+        talentReminder = {
+            enabled = false,
+            loadouts = {},
+        },
+        raidAlerts = RAID_ALERTS_DEFAULTS,
+        poisonReminder = POISON_REMINDER_DEFAULTS,
+        equipmentReminder = EQUIPMENT_REMINDER_DEFAULTS,
+        mouseRing = MOUSE_RING_DEFAULTS,
+        cRez = CREZ_DEFAULTS,
+        petTracker = PET_TRACKER_DEFAULTS,
+        coTank = CO_TANK_DEFAULTS,
+        CursorTracker = {},
+
+        -- Misc settings
+        misc = {
+            autoFillDelete = true,
+            fasterLoot = true,
+            suppressLootWarnings = true,
+            hideAlerts = false,
+            hideTalkingHead = false,
+            hideEventToasts = false,
+            hideZoneText = false,
+            autoRepair = false,
+            guildRepair = false,
+            durabilityWarning = true,
+            durabilityThreshold = 30,
+            autoSlotKeystone = true,
+            skipQueueConfirm = false,
+            deathReleaseProtection = false,
+            ahCurrentExpansion = false,
+            hideMinimapIcon = false,
+        },
+
+        -- Slash commands
+        slashCommands = {
+            enabled = true,
+            commands = {
+                { name = "cdm", frame = "CooldownViewerSettings", enabled = true, default = true },
+                { name = "em", frame = "EditModeManagerFrame", enabled = true, default = true },
+                { name = "kb", frame = "QuickKeybindFrame", enabled = true, default = true },
+            },
+        },
+
+        -- BuffWatcher
+        buffWatcherV2 = {
+            enabled = true,
+            userEntries = {
+                raidBuffs = { spellIDs = {} },
+                consumables = { spellIDs = {} },
+                shamanImbues = { enchantIDs = {} },
+                roguePoisons = { enchantIDs = {} },
+                shamanShields = { spellIDs = {} },
+            },
+            categoryEnabled = {
+                raidBuffs = true,
+                consumables = true,
+                shamanImbues = true,
+                roguePoisons = true,
+                shamanShields = true,
+            },
+            thresholds = {
+                dungeon = 2400,  -- 40 min in seconds
+                raid = 900,      -- 15 min
+                other = 300,     -- 5 min
+            },
+            talentMods = {
+                roguePoisons = {
+                    { type = "requireCount", talentID = 381802, count = 4 },
+                },
+            },
+            disabledDefaults = {},
+            consumableGroupEnabled = {
+                flask = true,
+                food = true,
+                rune = true,
+                weaponBuff = true,
+            },
+            consumableAutoUse = {
+                flask = nil,
+                food = nil,
+                rune = nil,
+                weaponBuff = nil,
+            },
+            inventoryGroupEnabled = {
+                dpsPotion = true,
+                healthPotion = true,
+                healthstone = true,
+                gatewayControl = true,
+                manaBun = false,
+            },
+            classBuffs = {
+                WARRIOR     = { enabled = true, groups = {} },
+                PALADIN     = { enabled = true, groups = {} },
+                HUNTER      = { enabled = true, groups = {} },
+                ROGUE       = { enabled = true, groups = {} },
+                PRIEST      = { enabled = true, groups = {} },
+                DEATHKNIGHT = { enabled = true, groups = {} },
+                SHAMAN      = { enabled = true, groups = {} },
+                MAGE        = { enabled = true, groups = {} },
+                WARLOCK     = { enabled = true, groups = {} },
+                MONK        = { enabled = true, groups = {} },
+                DRUID       = { enabled = true, groups = {} },
+                DEMONHUNTER = { enabled = true, groups = {} },
+                EVOKER      = { enabled = true, groups = {} },
+            },
+            reportCardPosition = nil,
+            reportCardIconSize = 32,
+            reportCardUnlock = false,
+            reportCardScale = 1.0,
+            reportCardAutoCloseDelay = 5,
+            scanOnLogin = false,
+            lastSection = "classBuffs",
+            chatReportEnabled = false,
+        },
+    },
+    char = {
+        -- Spec-based profile switching config (per-character)
+        specProfiles = {},
+        -- Migration flag (per-character since old data is per-character)
+        migrationCompleted = false,
+    },
+    global = {
+        -- Minimap icon position (account-wide)
+        minimapIcon = {},
+    },
+}
+
 -- Restore a module to default settings
 function ns:RestoreModuleDefaults(moduleName, skipKeys)
     local defaults = ns.ModuleDefaults[moduleName]
@@ -360,174 +526,197 @@ function ns:RestoreModuleDefaults(moduleName, skipKeys)
     return true
 end
 
-local function InitializeDB()
-    -- Initialize locale
-    NaowhQOL.locale = NaowhQOL.locale or "enUS"
-    ns:SetLocale(NaowhQOL.locale)
+-- Migrate data from old per-character SavedVariables to AceDB profile
+local function MigrateFromLegacy()
+    DebugPrint("Migration check starting...")
 
-    NaowhQOL.config = NaowhQOL.config or {}
-    ApplyDefaults(NaowhQOL.config, ns.DefaultConfig.config)
-
-    NaowhQOL.combatTimer = NaowhQOL.combatTimer or {}
-    ApplyDefaults(NaowhQOL.combatTimer, COMBAT_TIMER_DEFAULTS)
-
-    NaowhQOL.combatAlert = NaowhQOL.combatAlert or {}
-    ApplyDefaults(NaowhQOL.combatAlert, COMBAT_ALERT_DEFAULTS)
-
-    -- Action Halo (per-spec settings managed by MouseCursor.lua)
-    NaowhQOL.CursorTracker = NaowhQOL.CursorTracker or {}
-
-    NaowhQOL.mouseRing = NaowhQOL.mouseRing or {}
-    ApplyDefaults(NaowhQOL.mouseRing, MOUSE_RING_DEFAULTS)
-
-    NaowhQOL.crosshair = NaowhQOL.crosshair or {}
-    ApplyDefaults(NaowhQOL.crosshair, CROSSHAIR_DEFAULTS)
-
-    NaowhQOL.combatLogger = NaowhQOL.combatLogger or {}
-    ApplyDefaults(NaowhQOL.combatLogger, COMBAT_LOGGER_DEFAULTS)
-    NaowhQOL.combatLogger.instances = NaowhQOL.combatLogger.instances or {}
-
-    -- Dragonriding
-    NaowhQOL.dragonriding = NaowhQOL.dragonriding or {}
-    ApplyDefaults(NaowhQOL.dragonriding, DRAGONRIDING_DEFAULTS)
-
-    NaowhQOL.misc = NaowhQOL.misc or {}
-    local misc = NaowhQOL.misc
-    if misc.autoFillDelete == nil then misc.autoFillDelete = true end
-    if misc.fasterLoot == nil then misc.fasterLoot = true end
-    if misc.suppressLootWarnings == nil then misc.suppressLootWarnings = true end
-    if misc.hideAlerts == nil then misc.hideAlerts = false end
-    if misc.hideTalkingHead == nil then misc.hideTalkingHead = false end
-    if misc.hideEventToasts == nil then misc.hideEventToasts = false end
-    if misc.hideZoneText == nil then misc.hideZoneText = false end
-    if misc.autoRepair == nil then misc.autoRepair = false end
-    if misc.guildRepair == nil then misc.guildRepair = false end
-    if misc.durabilityWarning == nil then misc.durabilityWarning = true end
-    if misc.durabilityThreshold == nil then misc.durabilityThreshold = 30 end
-    if misc.autoSlotKeystone == nil then misc.autoSlotKeystone = true end
-    if misc.skipQueueConfirm == nil then misc.skipQueueConfirm = false end
-    if misc.deathReleaseProtection == nil then misc.deathReleaseProtection = false end
-    if misc.ahCurrentExpansion == nil then misc.ahCurrentExpansion = false end
-    if misc.hideMinimapIcon == nil then misc.hideMinimapIcon = false end
-
-    -- GCD Tracker uses a defaults table since it has a lot of keys
-    NaowhQOL.gcdTracker = NaowhQOL.gcdTracker or {}
-    local gtDefaults = {
-        enabled = false, unlock = false, duration = 5, iconSize = 32,
-        direction = "RIGHT", spacing = 4, fadeStart = 0.5,
-        stackOverlapping = true,
-        point = "CENTER", x = 0, y = -100, combatOnly = false,
-        showInDungeon = true, showInRaid = true, showInArena = true,
-        showInBattleground = true, showInWorld = true,
-        blocklist = { [6603] = true },
-        timelineColorR = 0.01, timelineColorG = 0.56, timelineColorB = 0.91,
-        timelineHeight = 4,
-        downtimeSummaryEnabled = false,
-    }
-    for k, v in pairs(gtDefaults) do
-        if NaowhQOL.gcdTracker[k] == nil then NaowhQOL.gcdTracker[k] = v end
+    if ns.db.char.migrationCompleted then
+        DebugPrint("Migration already completed for this character, skipping.")
+        return
     end
 
-    -- Stealth Reminder
-    NaowhQOL.stealthReminder = NaowhQOL.stealthReminder or {}
-    ApplyDefaults(NaowhQOL.stealthReminder, STEALTH_REMINDER_DEFAULTS)
+    -- Check if there's old data in the per-character NaowhQOL global
+    -- (This will exist if user had old addon version)
+    local oldData = rawget(_G, "NaowhQOL_Legacy") or {}
+    DebugPrint("Checking for legacy data in NaowhQOL_Legacy...")
 
-    -- Movement Alert
-    NaowhQOL.movementAlert = NaowhQOL.movementAlert or {}
-    ApplyDefaults(NaowhQOL.movementAlert, MOVEMENT_ALERT_DEFAULTS)
+    -- If NaowhQOL has actual user data (not just our reference), migrate it
+    -- We check for a key that would only exist in old saved data
+    local currentProfile = ns.db.profile
+    local hasOldData = false
+    local foundKeys = {}
 
-    -- Range Check
-    NaowhQOL.rangeCheck = NaowhQOL.rangeCheck or {}
-    ApplyDefaults(NaowhQOL.rangeCheck, RANGE_CHECK_DEFAULTS)
+    -- Check various module keys that would have user settings
+    local keysToCheck = {
+        "combatTimer", "combatAlert", "crosshair", "dragonriding",
+        "misc", "gcdTracker", "stealthReminder", "focusCastBar",
+        "emoteDetection", "rangeCheck", "mouseRing", "cRez", "petTracker",
+        "coTank", "slashCommands", "profiles", "specProfiles", "buffWatcherV2"
+    }
 
-    -- Emote Detection
-    NaowhQOL.emoteDetection = NaowhQOL.emoteDetection or {}
-    ApplyDefaults(NaowhQOL.emoteDetection, EMOTE_DETECTION_DEFAULTS)
+    for _, key in ipairs(keysToCheck) do
+        if oldData[key] and type(oldData[key]) == "table" then
+            hasOldData = true
+            table.insert(foundKeys, key)
+        end
+    end
 
-    -- Focus Cast Bar
-    NaowhQOL.focusCastBar = NaowhQOL.focusCastBar or {}
-    ApplyDefaults(NaowhQOL.focusCastBar, FOCUS_CAST_BAR_DEFAULTS)
+    if hasOldData then
+        DebugPrint("Found legacy data for: " .. table.concat(foundKeys, ", "))
 
-    -- Talent Reminder
-    NaowhQOL.talentReminder = NaowhQOL.talentReminder or {}
-    local tr = NaowhQOL.talentReminder
-    if tr.enabled == nil then tr.enabled = false end
-    tr.loadouts = tr.loadouts or {}
+        -- Copy module settings from old data to current profile
+        for _, key in ipairs(keysToCheck) do
+            if oldData[key] and type(oldData[key]) == "table" and key ~= "profiles" and key ~= "specProfiles" then
+                -- Deep copy the table
+                if not currentProfile[key] then
+                    currentProfile[key] = {}
+                end
+                for k, v in pairs(oldData[key]) do
+                    if type(v) == "table" then
+                        currentProfile[key][k] = {}
+                        for tk, tv in pairs(v) do
+                            currentProfile[key][k][tk] = tv
+                        end
+                    else
+                        currentProfile[key][k] = v
+                    end
+                end
+            end
+        end
 
-    -- Combat Rez
-    NaowhQOL.cRez = NaowhQOL.cRez or {}
-    local cr = NaowhQOL.cRez
-    -- Rez Timer
-    if cr.enabled           == nil then cr.enabled           = false     end
-    if cr.unlock            == nil then cr.unlock            = false     end
-    if cr.point             == nil then cr.point             = "CENTER"  end
-    if cr.x                 == nil then cr.x                 = 0         end
-    if cr.y                 == nil then cr.y                 = 150       end
-    if cr.iconSize          == nil then cr.iconSize          = 40        end
-    if cr.timerFontSize     == nil then cr.timerFontSize     = 11        end
-    if cr.timerColorR       == nil then cr.timerColorR       = 1         end
-    if cr.timerColorG       == nil then cr.timerColorG       = 1         end
-    if cr.timerColorB       == nil then cr.timerColorB       = 1         end
-    if cr.timerAlpha        == nil then cr.timerAlpha        = 1.0       end
-    if cr.countFontSize     == nil then cr.countFontSize     = 11        end
-    if cr.countColorR       == nil then cr.countColorR       = 1         end
-    if cr.countColorG       == nil then cr.countColorG       = 1         end
-    if cr.countColorB       == nil then cr.countColorB       = 1         end
-    if cr.countAlpha        == nil then cr.countAlpha        = 1.0       end
-    -- Death Warning
-    if cr.deathWarning      == nil then cr.deathWarning      = false     end
+        -- Migrate spec profiles to per-character storage
+        if oldData.specProfiles then
+            DebugPrint("Migrating spec profiles...")
+            for specIndex, specData in pairs(oldData.specProfiles) do
+                ns.db.char.specProfiles[specIndex] = specData
+            end
+        end
 
-    -- Pet Tracker
-    NaowhQOL.petTracker = NaowhQOL.petTracker or {}
-    ApplyDefaults(NaowhQOL.petTracker, PET_TRACKER_DEFAULTS)
+        -- Migrate minimap icon to global storage
+        if oldData.minimapIcon then
+            DebugPrint("Migrating minimap icon position...")
+            for k, v in pairs(oldData.minimapIcon) do
+                ns.db.global.minimapIcon[k] = v
+            end
+        end
 
-    -- Equipment Reminder
-    NaowhQOL.equipmentReminder = NaowhQOL.equipmentReminder or {}
-    ApplyDefaults(NaowhQOL.equipmentReminder, EQUIPMENT_REMINDER_DEFAULTS)
+        -- Migrate locale
+        if oldData.locale then
+            DebugPrint("Migrating locale: " .. oldData.locale)
+            currentProfile.locale = oldData.locale
+        end
+
+        DebugPrint("Migration completed successfully!")
+    else
+        DebugPrint("No legacy data found, using fresh AceDB profile.")
+    end
+
+    ns.db.char.migrationCompleted = true
+    DebugPrint("Migration flag set to true for this character.")
+end
+
+-- Clean up slash commands format (migrate old format if needed)
+local function CleanupSlashCommands()
+    local sc = NaowhQOL.slashCommands
+    if not sc or not sc.commands then return end
+
+    local cleaned = {}
+    for _, cmd in ipairs(sc.commands) do
+        if cmd.actionType == "command" and cmd.command then
+            table.insert(cleaned, cmd)
+        elseif cmd.frame then
+            table.insert(cleaned, cmd)
+        elseif cmd.actionType == "frameToggle" and cmd.action then
+            table.insert(cleaned, {
+                name = cmd.name,
+                actionType = "frame",
+                frame = cmd.action,
+                enabled = cmd.enabled,
+            })
+        end
+    end
+    sc.commands = cleaned
+end
+
+-- Profile change callback
+function ns:OnProfileChanged()
+    -- Update the NaowhQOL reference to point to new profile
+    NaowhQOL = ns.db.profile
+
+    -- Clean up any legacy format issues
+    CleanupSlashCommands()
+
+    -- Clean up removed privateAuras from old saved data
+    if NaowhQOL.coTank then
+        NaowhQOL.coTank.privateAuras = nil
+    end
+
     -- Ensure ecSpecRules table exists
-    if NaowhQOL.equipmentReminder.ecSpecRules == nil then
+    if NaowhQOL.equipmentReminder and NaowhQOL.equipmentReminder.ecSpecRules == nil then
         NaowhQOL.equipmentReminder.ecSpecRules = {}
     end
 
-    -- Co-Tank Frame
-    NaowhQOL.coTank = NaowhQOL.coTank or {}
-    ApplyDefaults(NaowhQOL.coTank, CO_TANK_DEFAULTS)
-    -- Clean up removed privateAuras from old saved data
-    NaowhQOL.coTank.privateAuras = nil
+    -- Ensure combatLogger.instances exists
+    if NaowhQOL.combatLogger then
+        NaowhQOL.combatLogger.instances = NaowhQOL.combatLogger.instances or {}
+    end
 
-    -- Slash Commands
-    NaowhQOL.slashCommands = NaowhQOL.slashCommands or {}
-    local sc = NaowhQOL.slashCommands
-    if sc.enabled == nil then sc.enabled = true end
-    if sc.commands == nil then
-        sc.commands = {
-            { name = "cdm", frame = "CooldownViewerSettings", enabled = true, default = true },
-            { name = "em", frame = "EditModeManagerFrame", enabled = true, default = true },
-            { name = "kb", frame = "QuickKeybindFrame", enabled = true, default = true },
-        }
+    -- Ensure talentReminder.loadouts exists
+    if NaowhQOL.talentReminder then
+        NaowhQOL.talentReminder.loadouts = NaowhQOL.talentReminder.loadouts or {}
     end
-    -- Migrate: Convert old frameToggle format to new format, keep all valid commands
-    if sc.commands then
-        local cleaned = {}
-        for _, cmd in ipairs(sc.commands) do
-            if cmd.actionType == "command" and cmd.command then
-                -- Keep slash command aliases as-is
-                table.insert(cleaned, cmd)
-            elseif cmd.frame then
-                -- Keep frame toggle commands as-is
-                table.insert(cleaned, cmd)
-            elseif cmd.actionType == "frameToggle" and cmd.action then
-                -- Convert old frameToggle format to new format
-                table.insert(cleaned, {
-                    name = cmd.name,
-                    actionType = "frame",
-                    frame = cmd.action,
-                    enabled = cmd.enabled,
-                })
-            end
-        end
-        sc.commands = cleaned
+
+    -- Re-initialize locale
+    if ns.SetLocale then
+        ns:SetLocale(NaowhQOL.locale or "enUS")
     end
+
+    -- Trigger refresh callbacks for all modules
+    if ns.SettingsIO then
+        ns.SettingsIO:TriggerRefreshAll()
+    end
+end
+
+local function InitializeDB()
+    -- Initialize AceDB
+    ns.db = AceDB:New("NaowhQOLDB", aceDBDefaults, true)
+
+    -- Point NaowhQOL to the current profile for backwards compatibility
+    NaowhQOL = ns.db.profile
+
+    -- Register profile change callbacks
+    ns.db.RegisterCallback(ns, "OnProfileChanged", "OnProfileChanged")
+    ns.db.RegisterCallback(ns, "OnProfileCopied", "OnProfileChanged")
+    ns.db.RegisterCallback(ns, "OnProfileReset", "OnProfileChanged")
+
+    -- Run migration for existing users
+    MigrateFromLegacy()
+
+    -- Initialize locale
+    if ns.SetLocale then
+        ns:SetLocale(NaowhQOL.locale or "enUS")
+    end
+
+    -- Ensure combatLogger.instances exists
+    NaowhQOL.combatLogger = NaowhQOL.combatLogger or {}
+    NaowhQOL.combatLogger.instances = NaowhQOL.combatLogger.instances or {}
+
+    -- Ensure talentReminder.loadouts exists
+    NaowhQOL.talentReminder = NaowhQOL.talentReminder or {}
+    NaowhQOL.talentReminder.loadouts = NaowhQOL.talentReminder.loadouts or {}
+
+    -- Clean up removed privateAuras from old saved data
+    if NaowhQOL.coTank then
+        NaowhQOL.coTank.privateAuras = nil
+    end
+
+    -- Ensure ecSpecRules table exists
+    if NaowhQOL.equipmentReminder then
+        NaowhQOL.equipmentReminder.ecSpecRules = NaowhQOL.equipmentReminder.ecSpecRules or {}
+    end
+
+    -- Clean up slash commands format
+    CleanupSlashCommands()
 end
 
 
