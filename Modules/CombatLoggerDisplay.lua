@@ -129,10 +129,11 @@ local function OnZoneChanged(zoneData)
     else
         -- start logging before the prompt so CHALLENGE_MODE_START is captured
         if not isLogging then
-            if CheckAdvancedLogging() then
-                LoggingCombat(true)
-                isLogging = true
+            if not CheckAdvancedLogging() then
+                return
             end
+            LoggingCombat(true)
+            isLogging = true
         end
 
         local promptText = "|cff" .. COLORS.BLUE .. "Naowh QOL|r\n\n"
@@ -156,8 +157,8 @@ end
 
 local loader = CreateFrame("Frame", "NaowhQOL_CombatLogger")
 loader:RegisterEvent("PLAYER_LOGIN")
+loader:RegisterEvent("PLAYER_ENTERING_WORLD")
 loader:RegisterEvent("CHALLENGE_MODE_START")
-loader:RegisterEvent("CHALLENGE_MODE_RESET")
 
 loader:SetScript("OnEvent", function(self, event)
     if event == "CHALLENGE_MODE_START" then
@@ -171,15 +172,8 @@ loader:SetScript("OnEvent", function(self, event)
         return
     end
 
-    if event == "CHALLENGE_MODE_RESET" then
-        if isLogging then
-            C_Timer.After(2, function()
-                if isLogging then
-                    LoggingCombat(false)
-                    isLogging = false
-                end
-            end)
-        end
+    if event == "PLAYER_ENTERING_WORLD" then
+        isLogging = LoggingCombat()
         return
     end
 
@@ -199,9 +193,6 @@ loader:SetScript("OnEvent", function(self, event)
 
         if ns.ZoneUtil and ns.ZoneUtil.RegisterCallback then
             ns.ZoneUtil.RegisterCallback("CombatLogger", OnZoneChanged)
-            C_Timer.After(0.5, function()
-                OnZoneChanged(ns.ZoneUtil.GetCurrentZone())
-            end)
         end
 
         self:UnregisterEvent("PLAYER_LOGIN")

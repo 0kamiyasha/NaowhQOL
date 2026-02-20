@@ -155,7 +155,7 @@ local function UpdateRender()
             -- Set ready ring color (supports class color toggle)
             local readyR, readyG, readyB
             if db.gcdReadyMatchSwipe then
-                readyR, readyG, readyB = db.gcdR or 0.004, db.gcdG or 0.56, db.gcdB or 0.91
+                readyR, readyG, readyB = W.GetEffectiveColor(db, "gcdR", "gcdG", "gcdB", "gcdUseClassColor")
             elseif db.gcdReadyUseClassColor then
                 readyR, readyG, readyB = W.GetEffectiveColor(db, "gcdReadyR", "gcdReadyG", "gcdReadyB", "gcdReadyUseClassColor")
             else

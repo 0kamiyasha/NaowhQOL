@@ -287,7 +287,8 @@ function ns:InitImportExport()
                 local ok, err = ns.SettingsIO:LoadProfile(name)
                 if ok then
                     UpdateProfileStatus()
-                    profileStatus:SetText("|cff44ff44Loaded: " .. name .. "|r")
+                    profileStatus:SetText("|cff44ff44Loaded: " .. name .. " — reload to apply all changes|r")
+                    StaticPopup_Show("NAOWH_QOL_RELOAD")
                 else
                     profileStatus:SetText("|cffff4444" .. (err or "Failed to load") .. "|r")
                 end
@@ -310,23 +311,17 @@ function ns:InitImportExport()
         local specDropdowns = {}
         local RefreshSpecDropdowns
 
-        -- Save button
+        -- Save button — saves current settings directly into the active profile.
+        -- No popup: use "New" to create a differently-named profile.
         local saveBtn = W:CreateButton(sc, { text = "Save", width = 60, height = 24 })
         saveBtn:SetPoint("LEFT", profileDropdown, "RIGHT", 8, 0)
         saveBtn:SetScript("OnClick", function()
-            local dialog = StaticPopup_Show("NAOWH_QOL_PROFILE_NAME", "Save current settings as profile:")
-            if dialog then
-                dialog.data = {
-                    default = ns.SettingsIO:GetActiveProfile(),
-                    callback = function(name)
-                        ns.SettingsIO:SaveProfile(name)
-                        RefreshProfileDropdown()
-                        if RefreshSpecDropdowns then RefreshSpecDropdowns() end
-                        UpdateProfileStatus()
-                        profileStatus:SetText("|cff44ff44Saved: " .. name .. "|r")
-                    end
-                }
-            end
+            local active = ns.SettingsIO:GetActiveProfile()
+            ns.SettingsIO:SaveProfile(active)
+            RefreshProfileDropdown()
+            if RefreshSpecDropdowns then RefreshSpecDropdowns() end
+            UpdateProfileStatus()
+            profileStatus:SetText("|cff44ff44Saved: " .. active .. "|r")
         end)
 
         -- Rename button
@@ -411,10 +406,6 @@ function ns:InitImportExport()
         -- Copy profile section (AceDB profiles are account-wide)
         W:CreateSectionHeader(sc, "Copy Existing Profile", -180)
 
-        local copyStatus = sc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        copyStatus:SetPoint("TOPLEFT", 35, -245)
-        copyStatus:SetText("")
-
         local copyFromDropdown = CreateDynamicDropdown(sc, {
             width = 200,
             placeholder = "Select Profile to Copy",
@@ -436,6 +427,14 @@ function ns:InitImportExport()
             copyFromDropdown:SetSelectedValue(nil)
         end
 
+        local copyNote = sc:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        copyNote:SetPoint("TOPLEFT", 35, -248)
+        copyNote:SetText("Profiles are shared across all characters")
+
+        local copyStatus = sc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        copyStatus:SetPoint("TOPLEFT", 35, -264)
+        copyStatus:SetText("")
+
         local copyBtn = W:CreateButton(sc, { text = "Copy to Current", width = 110, height = 24 })
         copyBtn:SetPoint("LEFT", copyFromDropdown, "RIGHT", 8, 0)
         copyBtn:SetScript("OnClick", function()
@@ -454,12 +453,8 @@ function ns:InitImportExport()
             end
         end)
 
-        local copyNote = sc:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-        copyNote:SetPoint("TOPLEFT", 35, -248)
-        copyNote:SetText("Profiles are shared across all characters")
-
         -- Spec Profile Swap Section
-        W:CreateSectionHeader(sc, "Spec Profile Swap", -280)
+        W:CreateSectionHeader(sc, "Spec Profile Swap", -296)
 
         local specRows = {}
 
@@ -536,6 +531,14 @@ function ns:InitImportExport()
             UpdateProfileStatus()
             BuildSpecRows()
             RefreshSpecDropdowns()
+        end)
+
+        -- Keep profile dropdown in sync whenever the active profile changes
+        ns.SettingsIO:RegisterRefresh("importexport_profiles", function()
+            RefreshProfileDropdown()
+            RefreshCopyFromDropdown()
+            UpdateProfileStatus()
+            if RefreshSpecDropdowns then RefreshSpecDropdowns() end
         end)
 
         -- Multi-line edit box helper

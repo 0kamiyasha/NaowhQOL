@@ -638,11 +638,48 @@ function ns.SettingsIO:GetCharacterKey()
     return cachedCharKey
 end
 
+-- Deep copy helper for profile snapshots.
+-- NaowhQOL_Profiles is a plain account-wide SavedVariable (no AceDB aliasing),
+-- so snapshots stored there reliably survive every reload.
+local function deepCopy(orig)
+    if type(orig) ~= "table" then return orig end
+    local copy = {}
+    for k, v in pairs(orig) do
+        copy[deepCopy(k)] = deepCopy(v)
+    end
+    return copy
+end
+
 function ns.SettingsIO:GetProfileList()
     if not ns.db then return {} end
 
+    local seen = {}
     local profiles = {}
+
+    -- 1. AceDB profiles (may be empty if NaowhQOLDB didn't persist)
     ns.db:GetProfiles(profiles)
+    for _, name in ipairs(profiles) do seen[name] = true end
+
+    -- 2. NaowhQOL_Profiles (reliable account-wide SV, no aliasing problems)
+    if NaowhQOL_Profiles and NaowhQOL_Profiles.profileKeys then
+        for name in pairs(NaowhQOL_Profiles.profileKeys) do
+            if not seen[name] then
+                profiles[#profiles + 1] = name
+                seen[name] = true
+            end
+        end
+    end
+
+    -- 3. AceDB global registry as additional fallback
+    if ns.db.global and ns.db.global.savedProfiles then
+        for name in pairs(ns.db.global.savedProfiles) do
+            if not seen[name] then
+                profiles[#profiles + 1] = name
+                seen[name] = true
+            end
+        end
+    end
+
     table.sort(profiles)
     return profiles
 end
@@ -653,13 +690,26 @@ function ns.SettingsIO:GetActiveProfile()
 end
 
 function ns.SettingsIO:SaveProfile(name)
-    -- AceDB auto-saves, but if we want to save as a new profile name:
     if not ns.db then return false end
 
+    -- Primary storage: NaowhQOL_Profiles (plain account-wide SV, always reliable).
+    NaowhQOL_Profiles = NaowhQOL_Profiles or {}
+    NaowhQOL_Profiles.profileKeys = NaowhQOL_Profiles.profileKeys or {}
+    NaowhQOL_Profiles.profileData = NaowhQOL_Profiles.profileData or {}
+    NaowhQOL_Profiles.profileData[name] = deepCopy(ns.db.profile)
+    NaowhQOL_Profiles.profileKeys[name] = true
+    NaowhQOL_Profiles.activeProfile = name  -- remember this as the active profile
+
+    -- Secondary: also use AceDB profile switch so GetCurrentProfile() reflects the name.
     local current = ns.db:GetCurrentProfile()
     if current ~= name then
-        -- Copy current to new profile name
         ns.db:SetProfile(name)
+        ns.db:CopyProfile(current)
+    end
+
+    -- Tertiary: global registry fallback.
+    if ns.db.global then
+        ns.db.global.savedProfiles[name] = true
     end
 
     return true
@@ -668,9 +718,18 @@ end
 function ns.SettingsIO:CreateDefaultProfile(name)
     if not ns.db then return false end
 
-    -- Create a new profile with defaults by resetting
+    -- Create a new profile with defaults by switching and resetting
     ns.db:SetProfile(name)
     ns.db:ResetProfile()
+
+    -- Register in NaowhQOL_Profiles
+    NaowhQOL_Profiles = NaowhQOL_Profiles or {}
+    NaowhQOL_Profiles.profileKeys = NaowhQOL_Profiles.profileKeys or {}
+    NaowhQOL_Profiles.profileData = NaowhQOL_Profiles.profileData or {}
+    NaowhQOL_Profiles.profileKeys[name] = true
+    NaowhQOL_Profiles.profileData[name] = deepCopy(ns.db.profile)
+
+    if ns.db.global then ns.db.global.savedProfiles[name] = true end
 
     -- Trigger refresh to apply defaults to UI
     self:TriggerRefreshAll()
@@ -681,48 +740,63 @@ end
 function ns.SettingsIO:LoadProfile(name)
     if not ns.db then return false, "Database not initialized" end
 
-    -- Check if profile exists
     local profiles = self:GetProfileList()
     local exists = false
     for _, pname in ipairs(profiles) do
-        if pname == name then
-            exists = true
-            break
+        if pname == name then exists = true; break end
+    end
+    if not exists then return false, "Profile not found" end
+
+    -- Switch AceDB to this profile name so GetCurrentProfile() returns it.
+    ns.db:SetProfile(name)  -- fires OnProfileChanged → NaowhQOL re-aliased
+
+    -- Apply the NaowhQOL_Profiles snapshot on top (AceDB data may have been
+    -- stripped by removeDefaults, leaving the profile empty on disk).
+    local savedData = NaowhQOL_Profiles and
+                      NaowhQOL_Profiles.profileData and
+                      NaowhQOL_Profiles.profileData[name]
+    if savedData then
+        for k, v in pairs(savedData) do
+            ns.db.profile[k] = type(v) == "table" and deepCopy(v) or v
         end
+        self:TriggerRefreshAll()
     end
 
-    if not exists then
-        return false, "Profile not found"
-    end
+    -- Persist which profile is active so it survives reload.
+    NaowhQOL_Profiles = NaowhQOL_Profiles or {}
+    NaowhQOL_Profiles.activeProfile = name
 
-    ns.db:SetProfile(name)
     return true
 end
 
 function ns.SettingsIO:DeleteProfile(name)
     if not ns.db then return false end
 
-    local current = ns.db:GetCurrentProfile()
+    -- Remove from NaowhQOL_Profiles.
+    if NaowhQOL_Profiles then
+        if NaowhQOL_Profiles.profileKeys then NaowhQOL_Profiles.profileKeys[name] = nil end
+        if NaowhQOL_Profiles.profileData then NaowhQOL_Profiles.profileData[name] = nil end
+    end
 
-    -- Can't delete current profile, switch first
+    -- Remove from global registry.
+    if ns.db.global then ns.db.global.savedProfiles[name] = nil end
+
+    -- AceDB: switch away from this profile before deleting.
+    local current = ns.db:GetCurrentProfile()
     if current == name then
         local profiles = self:GetProfileList()
         for _, pname in ipairs(profiles) do
-            if pname ~= name then
-                ns.db:SetProfile(pname)
-                break
-            end
+            if pname ~= name then ns.db:SetProfile(pname); break end
         end
     end
+    pcall(function() ns.db:DeleteProfile(name, true) end)
 
-    ns.db:DeleteProfile(name, true)
     return true
 end
 
 function ns.SettingsIO:RenameProfile(oldName, newName)
     if not ns.db then return false, "not_found" end
 
-    -- Check if old profile exists
     local profiles = self:GetProfileList()
     local oldExists, newExists = false, false
     for _, pname in ipairs(profiles) do
@@ -733,23 +807,29 @@ function ns.SettingsIO:RenameProfile(oldName, newName)
     if not oldExists then return false, "not_found" end
     if newExists then return false, "exists" end
 
+    -- Rename in NaowhQOL_Profiles.
+    if NaowhQOL_Profiles then
+        NaowhQOL_Profiles.profileKeys = NaowhQOL_Profiles.profileKeys or {}
+        NaowhQOL_Profiles.profileData = NaowhQOL_Profiles.profileData or {}
+        NaowhQOL_Profiles.profileData[newName] = NaowhQOL_Profiles.profileData[oldName]
+        NaowhQOL_Profiles.profileData[oldName] = nil
+        NaowhQOL_Profiles.profileKeys[newName] = true
+        NaowhQOL_Profiles.profileKeys[oldName] = nil
+    end
+
+    -- Update global registry.
+    if ns.db.global then
+        ns.db.global.savedProfiles[oldName] = nil
+        ns.db.global.savedProfiles[newName] = true
+    end
+
+    -- AceDB rename simulation.
     local current = ns.db:GetCurrentProfile()
-
-    -- Copy old to new, then delete old
     ns.db:SetProfile(oldName)
-    ns.db:CopyProfile(oldName, true)  -- This actually doesn't work as expected
-
-    -- AceDB doesn't have a rename, so we manually copy
     ns.db:SetProfile(newName)
     ns.db:CopyProfile(oldName)
-    ns.db:DeleteProfile(oldName, true)
-
-    -- If we were on the old profile, stay on new
-    if current == oldName then
-        ns.db:SetProfile(newName)
-    else
-        ns.db:SetProfile(current)
-    end
+    pcall(function() ns.db:DeleteProfile(oldName, true) end)
+    if current ~= oldName then ns.db:SetProfile(current) end
 
     return true
 end
@@ -757,14 +837,24 @@ end
 function ns.SettingsIO:CopyProfile(sourceName)
     if not ns.db then return false, "Database not initialized" end
 
-    -- Check if source profile exists
+    -- Prefer NaowhQOL_Profiles snapshot (always reliable).
+    local savedData = NaowhQOL_Profiles and
+                      NaowhQOL_Profiles.profileData and
+                      NaowhQOL_Profiles.profileData[sourceName]
+
+    if savedData then
+        for k, v in pairs(savedData) do
+            ns.db.profile[k] = type(v) == "table" and deepCopy(v) or v
+        end
+        self:TriggerRefreshAll()
+        return true
+    end
+
+    -- Fallback: AceDB native copy.
     local profiles = self:GetProfileList()
     local exists = false
     for _, pname in ipairs(profiles) do
-        if pname == sourceName then
-            exists = true
-            break
-        end
+        if pname == sourceName then exists = true; break end
     end
 
     if not exists then

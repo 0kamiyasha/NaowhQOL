@@ -326,7 +326,7 @@ ns.ModuleDefaults = {
 local aceDBDefaults = {
     profile = {
         -- Locale
-        locale = "enUS",
+        locale = GetLocale(),
 
         -- Config (UI state)
         config = {
@@ -484,6 +484,10 @@ local aceDBDefaults = {
     global = {
         -- Minimap icon position (account-wide)
         minimapIcon = {},
+        -- Registry of saved profile names (account-wide).
+        -- Needed because AceDB strips empty/all-default profile tables before
+        -- writing to disk, causing profile names to vanish on reload.
+        savedProfiles = {},
     },
 }
 
@@ -527,7 +531,7 @@ function ns:RestoreModuleDefaults(moduleName, skipKeys)
 end
 
 -- Migrate data from old per-character SavedVariables to AceDB profile
-local function MigrateFromLegacy()
+local function MigrateFromLegacy(legacyCharData)
     DebugPrint("Migration check starting...")
 
     if ns.db.char.migrationCompleted then
@@ -535,9 +539,9 @@ local function MigrateFromLegacy()
         return
     end
 
-    -- Check if there's old data in the per-character NaowhQOL global
-    -- (This will exist if user had old addon version)
-    local oldData = rawget(_G, "NaowhQOL_Legacy") or {}
+    -- Use the per-character data captured before AceDB redirected NaowhQOL.
+    -- Fall back to NaowhQOL_Legacy for very old addon users.
+    local oldData = legacyCharData or rawget(_G, "NaowhQOL_Legacy") or {}
     DebugPrint("Checking for legacy data in NaowhQOL_Legacy...")
 
     -- If NaowhQOL has actual user data (not just our reference), migrate it
@@ -668,7 +672,7 @@ function ns:OnProfileChanged()
 
     -- Re-initialize locale
     if ns.SetLocale then
-        ns:SetLocale(NaowhQOL.locale or "enUS")
+        ns:SetLocale(NaowhQOL.locale or GetLocale())
     end
 
     -- Trigger refresh callbacks for all modules
@@ -678,6 +682,11 @@ function ns:OnProfileChanged()
 end
 
 local function InitializeDB()
+    -- Capture the real per-character saved data BEFORE AceDB redirects NaowhQOL.
+    -- After AceDB:New + the alias below, NaowhQOL points to an empty AceDB profile
+    -- table, so migration must use this snapshot of the original on-disk data.
+    local legacyCharData = type(NaowhQOL) == "table" and NaowhQOL or nil
+
     -- Initialize AceDB
     ns.db = AceDB:New("NaowhQOLDB", aceDBDefaults, true)
 
@@ -689,12 +698,34 @@ local function InitializeDB()
     ns.db.RegisterCallback(ns, "OnProfileCopied", "OnProfileChanged")
     ns.db.RegisterCallback(ns, "OnProfileReset", "OnProfileChanged")
 
-    -- Run migration for existing users
-    MigrateFromLegacy()
+    -- Run migration for existing users (pass real legacy data)
+    MigrateFromLegacy(legacyCharData)
+
+    -- Restore the previously active profile (saved in NaowhQOL_Profiles.activeProfile).
+    -- This must happen after migration so the profile data is already in place.
+    if NaowhQOL_Profiles and NaowhQOL_Profiles.activeProfile then
+        local target = NaowhQOL_Profiles.activeProfile
+        local profiles = ns.db:GetProfiles({})
+        -- Ensure the profile exists in AceDB (may have been stripped if all-defaults)
+        ns.db:SetProfile(target)
+        -- Apply snapshot data over whatever AceDB loaded
+        local snap = NaowhQOL_Profiles.profileData and NaowhQOL_Profiles.profileData[target]
+        if snap then
+            for k, v in pairs(snap) do
+                if type(v) == "table" then
+                    ns.db.profile[k] = {}
+                    for tk, tv in pairs(v) do ns.db.profile[k][tk] = tv end
+                else
+                    ns.db.profile[k] = v
+                end
+            end
+        end
+        NaowhQOL = ns.db.profile
+    end
 
     -- Initialize locale
     if ns.SetLocale then
-        ns:SetLocale(NaowhQOL.locale or "enUS")
+        ns:SetLocale(NaowhQOL.locale or GetLocale())
     end
 
     -- Ensure combatLogger.instances exists
