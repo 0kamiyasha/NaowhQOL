@@ -174,6 +174,60 @@ local TYPE_SCHEMAS = {
         lastSection = "string",
         reportCardPosition = "table",
     },
+    buffTracker = {
+        enabled = "boolean", iconSize = "number", spacing = "number", textSize = "number",
+        font = "string", showMissingOnly = "boolean", combatOnly = "boolean",
+        showCooldown = "boolean", showStacks = "boolean", unlocked = "boolean",
+        showAllRaidBuffs = "boolean", showRaidBuffs = "boolean", showPersonalAuras = "boolean",
+        showStances = "boolean", growDirection = "string", maxIconsPerRow = "number",
+        point = "string", posX = "number", posY = "number", width = "number", height = "number",
+    },
+    movementAlert = {
+        enabled = "boolean", unlock = "boolean", font = "string",
+        displayMode = "string", textFormat = "string", barShowIcon = "boolean",
+        textColorR = "number", textColorG = "number", textColorB = "number",
+        precision = "number", pollRate = "number",
+        point = "string", x = "number", y = "number", width = "number", height = "number",
+        combatOnly = "boolean",
+        tsEnabled = "boolean", tsUnlock = "boolean",
+        tsText = "string", tsColorR = "number", tsColorG = "number", tsColorB = "number",
+        tsPoint = "string", tsX = "number", tsY = "number", tsWidth = "number", tsHeight = "number",
+        tsSoundEnabled = "boolean", tsSoundID = "number",
+        tsTtsEnabled = "boolean", tsTtsMessage = "string", tsTtsVolume = "number", tsTtsRate = "number",
+        gwEnabled = "boolean", gwUnlock = "boolean", gwCombatOnly = "boolean",
+        gwText = "string", gwColorR = "number", gwColorG = "number", gwColorB = "number", gwColorUseClassColor = "boolean",
+        gwPoint = "string", gwX = "number", gwY = "number", gwWidth = "number", gwHeight = "number",
+        gwSoundEnabled = "boolean", gwSoundID = "number",
+        gwTtsEnabled = "boolean", gwTtsMessage = "string", gwTtsVolume = "number",
+    },
+    talentReminder = {
+        enabled = "boolean",
+        loadouts = "table",
+    },
+    raidAlerts = {
+        enabled = "boolean",
+    },
+    poisonReminder = {
+        enabled = "boolean",
+    },
+    equipmentReminder = {
+        enabled = "boolean",
+        showOnInstance = "boolean", showOnReadyCheck = "boolean",
+        autoHideDelay = "number", iconSize = "number",
+        point = "string", x = "number", y = "number",
+        ecEnabled = "boolean", ecUseAllSpecs = "boolean", ecSpecRules = "table",
+    },
+    coTank = {
+        enabled = "boolean", unlock = "boolean",
+        point = "string", x = "number", y = "number",
+        width = "number", height = "number",
+        healthColorR = "number", healthColorG = "number", healthColorB = "number",
+        useClassColor = "boolean", bgAlpha = "number",
+        showName = "boolean", nameFormat = "string", nameLength = "number",
+        nameFontSize = "number",
+        nameColorR = "number", nameColorG = "number", nameColorB = "number",
+        nameColorUseClassColor = "boolean",
+    },
 }
 
 -- Validate imported data against schema
@@ -900,3 +954,54 @@ ns.SettingsIO:RegisterSimple("slashCommands",    "Slash Commands")
 ns.SettingsIO:RegisterSimple("cRez",             "Combat Rez")
 ns.SettingsIO:RegisterSimple("petTracker",       "Pet Tracker")
 ns.SettingsIO:RegisterSimple("buffWatcherV2",    "Buff Watcher V2")
+ns.SettingsIO:RegisterSimple("buffTracker",      "Buff Tracker")
+ns.SettingsIO:RegisterSimple("movementAlert",    "Movement Alert")
+ns.SettingsIO:RegisterSimple("talentReminder",   "Talent Reminder")
+ns.SettingsIO:RegisterSimple("raidAlerts",       "Raid Alerts")
+ns.SettingsIO:RegisterSimple("poisonReminder",   "Poison Reminder")
+ns.SettingsIO:RegisterSimple("equipmentReminder", "Equipment Reminder")
+ns.SettingsIO:RegisterSimple("coTank",           "Co-Tank Display")
+
+NaowhQOL_API = {
+
+    Import = function(str, keys, profileName)
+        if type(str) ~= "string" or str == "" then
+            return false, "string required"
+        end
+
+        local preview = ns.SettingsIO:Preview(str)
+        if not preview then
+            return false, "invalid import string"
+        end
+        local selectedKeys = {}
+        if keys then
+            for k in pairs(keys) do
+                if preview[k] then selectedKeys[k] = true end
+            end
+        else
+            selectedKeys = preview
+        end
+
+        local ok, err = ns.SettingsIO:Import(str, selectedKeys)
+        if not ok then return false, err end
+
+        local saveName = (type(profileName) == "string" and profileName ~= "")
+            and profileName
+            or ns.SettingsIO:GetActiveProfile()
+        ns.SettingsIO:SaveProfile(saveName)
+
+        return true
+    end,
+
+    GetModules = function()
+        local result = {}
+        for _, m in ipairs(ns.SettingsIO.modules) do
+            result[#result + 1] = m.key
+        end
+        return result
+    end,
+
+    GetVersion = function()
+        return C_AddOns.GetAddOnMetadata("NaowhQOL", "Version") or "unknown"
+    end,
+}
