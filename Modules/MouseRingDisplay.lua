@@ -261,6 +261,7 @@ local function CreateTrail()
     trailContainer:SetFrameLevel(1)
     trailContainer:SetPoint("BOTTOMLEFT")
     trailContainer:SetSize(1, 1)
+    trailContainer:Hide()  -- Start hidden so OnShow fires correctly when UpdateRender() shows it
 
     for i = 1, TRAIL_MAX do
         local tex = trailContainer:CreateTexture(nil, "BACKGROUND")
