@@ -8,7 +8,7 @@
 ## Notes-koKR: 삶의 질 향상과 최적화에 중점을 둔 고성능 World of Warcraft 애드온
 ## Notes-zhTW: 專注於生活品質改善和最佳化的高效能 World of Warcraft 插件
 ## Notes-ptBR: Addon de alto desempenho para World of Warcraft focado em melhorias de qualidade de vida e otimização
-## Version: 1.4.1
+## Version: 1.4.2
 ## SavedVariablesPerCharacter: NaowhQOL
 ## SavedVariables: NaowhQOLDB, NaowhQOL_Profiles
 ## AddonCompartmentFunc: NaowhQOL_OnAddonCompartmentClick
