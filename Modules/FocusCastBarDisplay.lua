@@ -339,6 +339,11 @@ local function UpdateLayout()
     local bgR, bgG, bgB = W.GetEffectiveColor(db, "bgColorR", "bgColorG", "bgColorB", "bgColorUseClassColor")
     bgTexture:SetVertexColor(bgR, bgG, bgB, db.bgAlpha)
 
+    -- Update bar style texture
+    local barStyle = db.barStyle or [[Interface\Buttons\WHITE8X8]]
+    progressBar:SetStatusBarTexture(barStyle)
+    bgTexture:SetTexture(barStyle)
+
     -- Re-anchor text frame to follow progressBar
     textFrame:ClearAllPoints()
     textFrame:SetAllPoints(progressBar)
@@ -355,6 +360,18 @@ local function UpdateLayout()
     local tcR, tcG, tcB = W.GetEffectiveColor(db, "textColorR", "textColorG", "textColorB", "textColorUseClassColor")
     spellNameText:SetTextColor(tcR, tcG, tcB)
     castTimeText:SetTextColor(tcR, tcG, tcB)
+
+    -- Apply spell name width limit (0 = unlimited)
+    -- Use SetWidth to truncate text visually (safe for secret values)
+    -- SetWordWrap(false) prevents text from wrapping to next line
+    spellNameText:SetWordWrap(false)
+    local truncateLimit = db.spellNameTruncate or 0
+    if truncateLimit > 0 then
+        local charWidth = fontSize * 0.6
+        spellNameText:SetWidth(truncateLimit * charWidth)
+    else
+        spellNameText:SetWidth(0)
+    end
 
     -- Show/hide text elements
     if db.showSpellName then

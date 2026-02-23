@@ -71,9 +71,9 @@ function ns:InitFocusCastBar()
 
         local G = ns.Layout:New(2)
 
-        local barColorLbl = appContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        barColorLbl:SetPoint("TOPLEFT", G:Col(1), G:Row(1) + 10)
-        barColorLbl:SetText(L["FOCUS_BAR_COLOR"])
+        local barColorLbl = appContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        barColorLbl:SetPoint("TOPLEFT", appContent, "TOPLEFT", G:Col(1), G:Row(1) + 5)
+        barColorLbl:SetText(W.Colorize(L["FOCUS_BAR_COLOR"], C.BLUE))
 
         W:CreateColorPicker(appContent, {
             label = L["FOCUS_BAR_READY"], db = db,
@@ -92,25 +92,35 @@ function ns:InitFocusCastBar()
         W:CreateColorPicker(appContent, {
             label = L["FOCUS_NONINT_COLOR"], db = db,
             rKey = "nonIntColorR", gKey = "nonIntColorG", bKey = "nonIntColorB",
-            x = G:Col(1), y = G:Row(2) + 5,
+            x = G:Col(1), y = G:Row(2),
             onChange = onUpdate
         })
 
         W:CreateColorPicker(appContent, {
             label = L["FOCUS_BACKGROUND"], db = db,
             rKey = "bgColorR", gKey = "bgColorG", bKey = "bgColorB",
-            x = G:Col(1), y = G:Row(3) + 5,
+            x = G:Col(2), y = G:Row(2),
             onChange = onUpdate
         })
 
-        -- bgAlpha stored as 0-1, slider shows 0-100
         local bgAlphaSlider = W:CreateAdvancedSlider(appContent,
             W.Colorize(L["FOCUS_BG_OPACITY"], C.ORANGE), 0, 100, -125, 5, true,
             function(val) db.bgAlpha = val / 100; onUpdate() end,
             { value = (db.bgAlpha ~= nil and db.bgAlpha or 0.8) * 100 })
-        PlaceSlider(bgAlphaSlider, appContent, G:Col(2), G:Row(3))
+        PlaceSlider(bgAlphaSlider, appContent, G:Col(1), G:Row(3))
 
-        appContent:SetHeight(G:Height(3))
+        local styleLabel = appContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        styleLabel:SetPoint("TOPLEFT", appContent, "TOPLEFT", G:Col(1), G:Row(4) + 5)
+        styleLabel:SetText(W.Colorize(L["FOCUS_BAR_STYLE"], C.BLUE))
+
+        W:CreateBarStylePicker(appContent, G:Col(1), G:Row(4) - 15,
+            db.barStyle or [[Interface\Buttons\WHITE8X8]],
+            function(path)
+                db.barStyle = path
+                onUpdate()
+            end)
+
+        appContent:SetHeight(G:Height(4))
         appWrap:RecalcHeight()
 
         -- ICON section
@@ -125,7 +135,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(iconContent, {
             label = L["FOCUS_SHOW_ICON"],
             db = db, key = "showIcon",
-            x = GI:Col(1), y = GI:Row(1) + 5,
+            x = GI:Col(1), y = GI:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -133,13 +143,13 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(iconContent, {
             label = L["FOCUS_AUTO_SIZE_ICON"],
             db = db, key = "autoSizeIcon",
-            x = GI:Col(2), y = GI:Row(1) + 5,
+            x = GI:Col(2), y = GI:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
 
         local iconSizeSlider = W:CreateAdvancedSlider(iconContent,
-            W.Colorize(L["COMMON_LABEL_ICON_SIZE"], C.ORANGE), 16, 64, -35, 1, false,
+            W.Colorize(L["COMMON_LABEL_ICON_SIZE"], C.ORANGE), 16, 64, -65, 1, false,
             function(val) db.iconSize = val; onUpdate() end,
             { db = db, key = "iconSize", moduleName = "focusCastBar" })
         PlaceSlider(iconSizeSlider, iconContent, GI:Col(1), GI:Row(2))
@@ -170,7 +180,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(textContent, {
             label = L["FOCUS_SHOW_NAME"],
             db = db, key = "showSpellName",
-            x = GT:Col(1), y = GT:Row(1) + 5,
+            x = GT:Col(1), y = GT:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -178,18 +188,18 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(textContent, {
             label = L["FOCUS_SHOW_TIME"],
             db = db, key = "showTimeRemaining",
-            x = GT:Col(2), y = GT:Row(1) + 5,
+            x = GT:Col(2), y = GT:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
 
-        W:CreateFontPicker(textContent, GT:Col(1), GT:Row(2) - 5, db.font, function(path)
+        W:CreateFontPicker(textContent, GT:Col(1), GT:Row(2), db.font, function(path)
             db.font = path
             onUpdate()
         end)
 
         local fontSizeSlider = W:CreateAdvancedSlider(textContent,
-            W.Colorize(L["COMMON_LABEL_FONT_SIZE"], C.ORANGE), 8, 24, -100, 1, false,
+            W.Colorize(L["COMMON_LABEL_FONT_SIZE"], C.ORANGE), 8, 24, -65, 1, false,
             function(val) db.fontSize = val; onUpdate() end,
             { db = db, key = "fontSize", moduleName = "focusCastBar" })
         PlaceSlider(fontSizeSlider, textContent, GT:Col(2), GT:Row(2))
@@ -197,9 +207,15 @@ function ns:InitFocusCastBar()
         W:CreateColorPicker(textContent, {
             label = L["COMMON_LABEL_TEXT_COLOR"], db = db,
             rKey = "textColorR", gKey = "textColorG", bKey = "textColorB",
-            x = GT:Col(1), y = GT:Row(3) + 5,
+            x = GT:Col(1), y = GT:Row(3),
             onChange = onUpdate
         })
+
+        local truncateSlider = W:CreateAdvancedSlider(textContent,
+            W.Colorize(L["FOCUS_SPELL_TRUNCATE"], C.ORANGE), 0, 20, -125, 1, false,
+            function(val) db.spellNameTruncate = val; onUpdate() end,
+            { db = db, key = "spellNameTruncate", moduleName = "focusCastBar" })
+        PlaceSlider(truncateSlider, textContent, GT:Col(2), GT:Row(3))
 
         textContent:SetHeight(GT:Height(3))
         textWrap:RecalcHeight()
@@ -216,7 +232,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(behContent, {
             label = L["FOCUS_SHOW_EMPOWER"],
             db = db, key = "showEmpowerStages",
-            x = GB:Col(1), y = GB:Row(1) + 5,
+            x = GB:Col(1), y = GB:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -224,7 +240,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(behContent, {
             label = L["FOCUS_HIDE_FRIENDLY"],
             db = db, key = "hideFriendlyCasts",
-            x = GB:Col(2), y = GB:Row(1) + 5,
+            x = GB:Col(2), y = GB:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -232,7 +248,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(behContent, {
             label = L["FOCUS_SHOW_SHIELD"],
             db = db, key = "showShieldIcon",
-            x = GB:Col(1), y = GB:Row(2) + 5,
+            x = GB:Col(1), y = GB:Row(2),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -240,7 +256,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(behContent, {
             label = L["FOCUS_CHANGE_COLOR"],
             db = db, key = "colorNonInterrupt",
-            x = GB:Col(2), y = GB:Row(2) + 5,
+            x = GB:Col(2), y = GB:Row(2),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -248,7 +264,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(behContent, {
             label = L["FOCUS_HIDE_ON_CD"],
             db = db, key = "hideOnCooldown",
-            x = GB:Col(1), y = GB:Row(3) + 5,
+            x = GB:Col(1), y = GB:Row(3),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -256,7 +272,7 @@ function ns:InitFocusCastBar()
         W:CreateCheckbox(behContent, {
             label = L["FOCUS_SHOW_KICK_TICK"],
             db = db, key = "showInterruptTick",
-            x = GB:Col(1), y = GB:Row(4) + 5,
+            x = GB:Col(1), y = GB:Row(4),
             template = "ChatConfigCheckButtonTemplate",
             onChange = onUpdate
         })
@@ -265,7 +281,7 @@ function ns:InitFocusCastBar()
             label = L["FOCUS_TICK_COLOR"], db = db,
             rKey = "tickColorR", gKey = "tickColorG", bKey = "tickColorB",
             classColorKey = "tickColorUseClassColor",
-            x = GB:Col(2), y = GB:Row(4) + 5,
+            x = GB:Col(2), y = GB:Row(4),
             onChange = onUpdate
         })
 
@@ -281,10 +297,10 @@ function ns:InitFocusCastBar()
 
         local GA = ns.Layout:New(2)
 
-        local soundCB = W:CreateCheckbox(audioContent, {
+        W:CreateCheckbox(audioContent, {
             label = L["FOCUS_SOUND_START"],
             db = db, key = "soundEnabled",
-            x = GA:Col(1), y = GA:Row(1) + 5,
+            x = GA:Col(1), y = GA:Row(1),
             template = "ChatConfigCheckButtonTemplate",
             onChange = function()
                 if db.soundEnabled then db.ttsEnabled = false end
@@ -292,14 +308,14 @@ function ns:InitFocusCastBar()
             end
         })
 
-        W:CreateSoundPicker(audioContent, GA:Col(1), GA:Row(2) + 15, db.sound, function(sound)
+        W:CreateSoundPicker(audioContent, GA:Col(1), GA:Row(2), db.sound, function(sound)
             db.sound = sound
         end)
 
-        local ttsCB = W:CreateCheckbox(audioContent, {
+        W:CreateCheckbox(audioContent, {
             label = L["FOCUS_USE_TTS"],
             db = db, key = "ttsEnabled",
-            x = GA:Col(1), y = GA:Row(3) + 20,
+            x = GA:Col(1), y = GA:Row(3),
             template = "ChatConfigCheckButtonTemplate",
             onChange = function()
                 if db.ttsEnabled then db.soundEnabled = false end
@@ -307,9 +323,13 @@ function ns:InitFocusCastBar()
             end
         })
 
+        W:CreateTTSVoicePicker(audioContent, GA:Col(1), GA:Row(4), db.ttsVoiceID or 0, function(voiceID)
+            db.ttsVoiceID = voiceID
+        end)
+
         local ttsLbl = audioContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        ttsLbl:SetPoint("TOPLEFT", GA:Col(1), GA:Row(4) + 10)
-        ttsLbl:SetText(L["COMMON_TTS_MESSAGE"] .. ":")
+        ttsLbl:SetPoint("TOPLEFT", audioContent, "TOPLEFT", GA:Col(1), GA:Row(5) + 5)
+        ttsLbl:SetText(W.Colorize(L["COMMON_TTS_MESSAGE"] .. ":", C.ORANGE))
 
         local ttsBox = CreateFrame("EditBox", nil, audioContent, "BackdropTemplate")
         ttsBox:SetSize(180, 24)
@@ -317,7 +337,7 @@ function ns:InitFocusCastBar()
         ttsBox:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]],
             edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
         ttsBox:SetBackdropColor(0, 0, 0, 1)
-        ttsBox:SetBackdropBorderColor(0, 0, 0, 1)
+        ttsBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
         ttsBox:SetFontObject("GameFontHighlightSmall")
         ttsBox:SetAutoFocus(false)
         ttsBox:SetTextInsets(6, 6, 0, 0)
@@ -331,27 +351,19 @@ function ns:InitFocusCastBar()
             db.ttsMessage = val
         end)
 
-        local ttsVoiceLbl = audioContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        ttsVoiceLbl:SetPoint("TOPLEFT", GA:Col(1), GA:Row(4) - 20)
-        ttsVoiceLbl:SetText(L["COMMON_TTS_VOICE"] .. ":")
-
-        W:CreateTTSVoicePicker(audioContent, 80, GA:Row(4) - 17, db.ttsVoiceID or 0, function(voiceID)
-            db.ttsVoiceID = voiceID
-        end)
-
         local ttsVolSlider = W:CreateAdvancedSlider(audioContent,
-            W.Colorize(L["COMMON_TTS_VOLUME"], C.ORANGE), 0, 100, -175, 5, true,
+            W.Colorize(L["COMMON_TTS_VOLUME"], C.ORANGE), 0, 100, -185, 5, true,
             function(val) db.ttsVolume = val end,
             { db = db, key = "ttsVolume", moduleName = "focusCastBar" })
-        PlaceSlider(ttsVolSlider, audioContent, GA:Col(1), GA:Row(5))
+        PlaceSlider(ttsVolSlider, audioContent, GA:Col(1), GA:Row(6))
 
         local ttsRateSlider = W:CreateAdvancedSlider(audioContent,
-            W.Colorize(L["COMMON_TTS_SPEED"], C.ORANGE), -10, 10, -175, 1, false,
+            W.Colorize(L["COMMON_TTS_SPEED"], C.ORANGE), -10, 10, -185, 1, false,
             function(val) db.ttsRate = val end,
             { db = db, key = "ttsRate", moduleName = "focusCastBar" })
-        PlaceSlider(ttsRateSlider, audioContent, GA:Col(2), GA:Row(5))
+        PlaceSlider(ttsRateSlider, audioContent, GA:Col(2), GA:Row(6))
 
-        audioContent:SetHeight(GA:Height(5))
+        audioContent:SetHeight(GA:Height(6))
         audioWrap:RecalcHeight()
 
         -- Relayout
