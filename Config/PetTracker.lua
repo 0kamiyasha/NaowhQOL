@@ -80,7 +80,23 @@ function ns:InitPetTracker()
             onChange = refresh
         })
 
-        behaviorContent:SetHeight(65)
+        W:CreateCheckbox(behaviorContent, {
+            label = L["CROSSHAIR_HIDE_MOUNTED"],
+            db = db, key = "hideWhenMounted",
+            x = 10, y = -55,
+            template = "ChatConfigCheckButtonTemplate",
+            onChange = refresh
+        })
+
+        W:CreateCheckbox(behaviorContent, {
+            label = L["BUFFTRACKER_COMBAT_ONLY"],
+            db = db, key = "combatOnly",
+            x = 10, y = -80,
+            template = "ChatConfigCheckButtonTemplate",
+            onChange = refresh
+        })
+
+        behaviorContent:SetHeight(115)
         behaviorWrap:RecalcHeight()
 
         -- APPEARANCE section

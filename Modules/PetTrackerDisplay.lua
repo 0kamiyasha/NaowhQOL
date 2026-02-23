@@ -6,6 +6,7 @@ local W = ns.Widgets
 local isMounted = false
 local isInVehicle = false
 local isDead = false
+local isInCombat = false
 local dismountTimer = nil
 local DISMOUNT_DELAY = 5
 
@@ -127,7 +128,13 @@ local function EvaluateWarning()
     if not IsPetClass() then return WARNING_NONE end
 
     -- Skip in suppressed states
-    if isDead or isMounted or isInVehicle then return WARNING_NONE end
+    if isDead or isInVehicle then return WARNING_NONE end
+
+    -- Hide when mounted option
+    if db.hideWhenMounted and isMounted then return WARNING_NONE end
+
+    -- Combat only option
+    if db.combatOnly and not isInCombat then return WARNING_NONE end
 
     -- Instance-only check
     if db.onlyInInstance then
@@ -272,6 +279,8 @@ loader:RegisterEvent("PLAYER_DEAD")
 loader:RegisterEvent("PLAYER_ALIVE")
 loader:RegisterEvent("PLAYER_UNGHOST")
 loader:RegisterEvent("SPELLS_CHANGED")
+loader:RegisterEvent("PLAYER_REGEN_DISABLED")
+loader:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("PetTracker", function(self, event, unit)
     local db = NaowhQOL.petTracker
@@ -282,6 +291,7 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("PetTracker", function(self, eve
         isMounted = IsMounted()
         isInVehicle = UnitInVehicle("player")
         isDead = UnitIsDeadOrGhost("player")
+        isInCombat = UnitAffectingCombat("player")
 
         -- Setup draggable frame
         db.width = db.width or 200
@@ -336,6 +346,10 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("PetTracker", function(self, eve
         isDead = true
     elseif event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
         isDead = false
+    elseif event == "PLAYER_REGEN_DISABLED" then
+        isInCombat = true
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        isInCombat = false
     elseif event == "UNIT_PET" then
         -- Pet changed - cancel dismount timer if active
         CancelDismountTimer()
