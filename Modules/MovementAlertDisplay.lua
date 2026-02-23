@@ -369,6 +369,10 @@ function timeSpiralFrame:UpdateDisplay()
         if timeSpiralResizeHandle then timeSpiralResizeHandle:Show() end
         timeSpiralText:SetText("TIME SPIRAL")
         timeSpiralFrame:Show()
+    elseif timeSpiralActiveTime then
+        -- Countdown is running; leave text and visibility alone
+        timeSpiralFrame:SetBackdrop(nil)
+        if timeSpiralResizeHandle then timeSpiralResizeHandle:Hide() end
     else
         timeSpiralFrame:SetBackdrop(nil)
         if timeSpiralResizeHandle then timeSpiralResizeHandle:Hide() end
@@ -887,10 +891,18 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
         end
     end
 
-    movementFrame:UpdateDisplay()
-    timeSpiralFrame:UpdateDisplay()
-    gatewayFrame:UpdateDisplay()
-    UpdateEventRegistration()
+    -- Only refresh frames on initialization / config-related events to avoid
+    -- blinking during combat when high-frequency spell events fire.
+    if event == "PLAYER_LOGIN"
+        or event == "PLAYER_SPECIALIZATION_CHANGED"
+        or event == "PLAYER_TALENT_UPDATE"
+        or event == "TRAIT_CONFIG_UPDATED"
+        or event == "LOADING_SCREEN_DISABLED" then
+        movementFrame:UpdateDisplay()
+        timeSpiralFrame:UpdateDisplay()
+        gatewayFrame:UpdateDisplay()
+        UpdateEventRegistration()
+    end
 end))
 
 ns.MovementAlertDisplay = movementFrame
