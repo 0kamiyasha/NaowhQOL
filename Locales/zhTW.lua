@@ -510,6 +510,7 @@ ns:RegisterLocale("zhTW", {
     RANGE_SUBTITLE = "目標距離追蹤",
     RANGE_ENABLE = "啟用距離檢查",
     RANGE_COMBAT_ONLY = "只在戰鬥中顯示",
+    RANGE_INCLUDE_FRIENDLIES = "包含友方",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

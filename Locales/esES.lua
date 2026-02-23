@@ -510,6 +510,7 @@ ns:RegisterLocale("esES", {
     RANGE_SUBTITLE = "Seguimiento de distancia al objetivo",
     RANGE_ENABLE = "Activar comprobación de alcance",
     RANGE_COMBAT_ONLY = "Mostrar solo en combate",
+    RANGE_INCLUDE_FRIENDLIES = "Incluir Aliados",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

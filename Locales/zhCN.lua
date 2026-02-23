@@ -519,6 +519,7 @@ ns:RegisterLocale("zhCN", {
     RANGE_SUBTITLE = "目标距离追踪",
     RANGE_ENABLE = "启用距离检测",
     RANGE_COMBAT_ONLY = "仅在战斗中显示",
+    RANGE_INCLUDE_FRIENDLIES = "包含友方",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS (斜杠命令)

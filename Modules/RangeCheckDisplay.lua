@@ -23,6 +23,12 @@ local function HasAttackableTarget()
     return true
 end
 
+local function HasValidTarget()
+    if not UnitExists("target") then return false end
+    if UnitIsDeadOrGhost("target") then return false end
+    return true
+end
+
 ---------------------------------------------------------------------------
 -- Color helpers
 ---------------------------------------------------------------------------
@@ -113,7 +119,7 @@ local function TickRangeCheck()
         return
     end
 
-    local hasTarget = HasAttackableTarget()
+    local hasTarget = db.includeFriendlies and HasValidTarget() or HasAttackableTarget()
 
     if db.rangeEnabled and hasTarget then
         if db.rangeCombatOnly and not inCombat and not db.rangeUnlock then

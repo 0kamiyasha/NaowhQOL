@@ -519,6 +519,7 @@ ns:RegisterLocale("enUS", {
     RANGE_SUBTITLE = "Target distance tracking",
     RANGE_ENABLE = "Enable Range Check",
     RANGE_COMBAT_ONLY = "Only Show In Combat",
+    RANGE_INCLUDE_FRIENDLIES = "Include Friendlies",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

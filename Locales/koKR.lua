@@ -510,6 +510,7 @@ ns:RegisterLocale("koKR", {
     RANGE_SUBTITLE = "대상 거리 추적",
     RANGE_ENABLE = "사거리 확인 활성화",
     RANGE_COMBAT_ONLY = "전투 중에만 표시",
+    RANGE_INCLUDE_FRIENDLIES = "아군 포함",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

@@ -510,6 +510,7 @@ ns:RegisterLocale("deDE", {
     RANGE_SUBTITLE = "Zielentfernungs-Verfolgung",
     RANGE_ENABLE = "Reichweitenprüfung aktivieren",
     RANGE_COMBAT_ONLY = "Nur im Kampf anzeigen",
+    RANGE_INCLUDE_FRIENDLIES = "Freundliche einbeziehen",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

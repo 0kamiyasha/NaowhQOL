@@ -65,7 +65,15 @@ function ns:InitRangeCheck()
             onChange = refreshRange
         })
 
-        behContent:SetHeight(35)
+        W:CreateCheckbox(behContent, {
+            label = L["RANGE_INCLUDE_FRIENDLIES"],
+            db = db, key = "includeFriendlies",
+            x = 10, y = -35,
+            template = "ChatConfigCheckButtonTemplate",
+            onChange = refreshRange
+        })
+
+        behContent:SetHeight(65)
         behWrap:RecalcHeight()
 
         -- APPEARANCE section
