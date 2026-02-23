@@ -13,8 +13,54 @@ MainWindow:SetResizable(true)
 MainWindow:SetResizeBounds(400, 300, 1400, 900)
 MainWindow:EnableMouse(true)
 MainWindow:RegisterForDrag("LeftButton")
+local function ClampFrameToScreen(frame)
+    local width, height = frame:GetSize()
+    local screenWidth, screenHeight = GetScreenWidth(), GetScreenHeight()
+    local minVisibleW = width * 0.10
+    local minVisibleH = height * 0.10
+
+    local left = frame:GetLeft()
+    local right = frame:GetRight()
+    local top = frame:GetTop()
+    local bottom = frame:GetBottom()
+
+    if not left or not right or not top or not bottom then return end
+
+    local needsClamp = false
+    local clampedLeft, clampedTop = left, top
+
+    -- Clamp horizontally (keep 10% visible)
+    if right < minVisibleW then
+        clampedLeft = minVisibleW - width
+        needsClamp = true
+    elseif left > screenWidth - minVisibleW then
+        clampedLeft = screenWidth - minVisibleW
+        needsClamp = true
+    end
+
+    -- Clamp vertically (keep 10% visible)
+    if top < minVisibleH then
+        clampedTop = minVisibleH
+        needsClamp = true
+    elseif bottom > screenHeight - minVisibleH then
+        clampedTop = screenHeight - minVisibleH + height
+        needsClamp = true
+    end
+
+    if needsClamp then
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", clampedLeft, clampedTop)
+    end
+end
+
 MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
-MainWindow:SetScript("OnDragStop", MainWindow.StopMovingOrSizing)
+MainWindow:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    ClampFrameToScreen(self)
+end)
+MainWindow:SetScript("OnShow", function(self)
+    ClampFrameToScreen(self)
+end)
 MainWindow:Hide()
 
 
