@@ -60,7 +60,7 @@ function ns.BarStyleList.MarkDirty()
 end
 
 function ns.BarStyleList.GetName(path)
-    if not ns.BarStyleList._nameByPath then ns.BarStyleList.Rebuild() end
+    if dirty or not ns.BarStyleList._nameByPath then ns.BarStyleList.Rebuild() end
     return ns.BarStyleList._nameByPath[path] or ("Unknown (" .. tostring(path) .. ")")
 end
 

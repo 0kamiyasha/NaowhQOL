@@ -1621,6 +1621,7 @@ function ns.Widgets:CreateFontPicker(parent, x, y, currentPath, onSelect)
                     selText:SetText(entry.name)
                     panel:Hide()
                     if onSelect then onSelect(entry.path, entry.name) end
+                    if ns.SettingsIO then ns.SettingsIO:MarkDirty() end
                 end)
                 row:Show()
             else
@@ -1798,6 +1799,7 @@ function ns.Widgets:CreateBarStylePicker(parent, x, y, currentPath, onSelect)
                     selText:SetText(entry.name)
                     panel:Hide()
                     if onSelect then onSelect(entry.path, entry.name) end
+                    if ns.SettingsIO then ns.SettingsIO:MarkDirty() end
                 end)
                 row:Show()
             else
@@ -2157,6 +2159,7 @@ function ns.Widgets:CreateTTSVoicePicker(parent, x, y, currentVoiceID, onSelect)
                     selText:SetText(entry.name)
                     panel:Hide()
                     if onSelect then onSelect(entry.id, entry.name) end
+                    if ns.SettingsIO then ns.SettingsIO:MarkDirty() end
                 end)
                 row.play:SetScript("OnClick", function()
                     PlaySample(entry.id)

@@ -188,6 +188,7 @@ local EMOTE_DETECTION_DEFAULTS = {
 
 local FOCUS_CAST_BAR_DEFAULTS = {
     enabled = false, unlock = false, point = "CENTER", x = 0, y = 100, width = 250, height = 24,
+    barStyle = [[Interface\Buttons\WHITE8X8]],
     barColorR = 0.01, barColorG = 0.56, barColorB = 0.91,
     barColorCdR = 0.5, barColorCdG = 0.5, barColorCdB = 0.5,
     bgColorR = 0.12, bgColorG = 0.12, bgColorB = 0.12, bgAlpha = 0.8,
