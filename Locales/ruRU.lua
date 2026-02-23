@@ -517,6 +517,7 @@ ns:RegisterLocale("ruRU", {
     RANGE_ENABLE = "Включить проверку дистанции",
     RANGE_COMBAT_ONLY = "Показывать только в бою",
     RANGE_INCLUDE_FRIENDLIES = "Включить союзников",
+    RANGE_HIDE_SUFFIX = "Скрыть суффикс",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

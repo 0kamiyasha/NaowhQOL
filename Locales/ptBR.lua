@@ -511,6 +511,7 @@ ns:RegisterLocale("ptBR", {
     RANGE_ENABLE = "Habilitar Verificação de Alcance",
     RANGE_COMBAT_ONLY = "Mostrar apenas em combate",
     RANGE_INCLUDE_FRIENDLIES = "Incluir Aliados",
+    RANGE_HIDE_SUFFIX = "Ocultar Sufixo",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

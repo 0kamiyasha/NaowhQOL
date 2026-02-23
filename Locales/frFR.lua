@@ -511,6 +511,7 @@ ns:RegisterLocale("frFR", {
     RANGE_ENABLE = "Activer la vérification de portée",
     RANGE_COMBAT_ONLY = "Afficher seulement en combat",
     RANGE_INCLUDE_FRIENDLIES = "Inclure les Alliés",
+    RANGE_HIDE_SUFFIX = "Masquer le Suffixe",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

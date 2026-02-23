@@ -511,6 +511,7 @@ ns:RegisterLocale("koKR", {
     RANGE_ENABLE = "사거리 확인 활성화",
     RANGE_COMBAT_ONLY = "전투 중에만 표시",
     RANGE_INCLUDE_FRIENDLIES = "아군 포함",
+    RANGE_HIDE_SUFFIX = "접미사 숨기기",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

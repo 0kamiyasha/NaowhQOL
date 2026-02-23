@@ -88,6 +88,14 @@ function ns:InitRangeCheck()
             refreshRange()
         end)
 
+        W:CreateCheckbox(appContent, {
+            label = L["RANGE_HIDE_SUFFIX"],
+            db = db, key = "hideSuffix",
+            x = 10, y = -35,
+            template = "ChatConfigCheckButtonTemplate",
+            onChange = refreshRange
+        })
+
         -- Initialize rangeColors table if needed
         if not db.rangeColors then
             db.rangeColors = {
@@ -105,7 +113,7 @@ function ns:InitRangeCheck()
 
         -- Range bracket color pickers
         local brackets = {0, 5, 10, 15, 20, 25, 30, 35, 40}
-        local yOffset = -50
+        local yOffset = -80
         for i, bracket in ipairs(brackets) do
             local nextBracket = brackets[i + 1] or (bracket + 5)
             local label = bracket .. "-" .. (nextBracket - 1) .. " yd"
@@ -151,7 +159,7 @@ function ns:InitRangeCheck()
             yOffset = yOffset - 28
         end
 
-        appContent:SetHeight(50 + (#brackets * 28) + 10)
+        appContent:SetHeight(80 + (#brackets * 28) + 10)
         appWrap:RecalcHeight()
 
         -- Layout

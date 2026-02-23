@@ -520,6 +520,7 @@ ns:RegisterLocale("zhCN", {
     RANGE_ENABLE = "启用距离检测",
     RANGE_COMBAT_ONLY = "仅在战斗中显示",
     RANGE_INCLUDE_FRIENDLIES = "包含友方",
+    RANGE_HIDE_SUFFIX = "隐藏后缀",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS (斜杠命令)

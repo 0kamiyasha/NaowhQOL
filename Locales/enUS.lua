@@ -520,6 +520,7 @@ ns:RegisterLocale("enUS", {
     RANGE_ENABLE = "Enable Range Check",
     RANGE_COMBAT_ONLY = "Only Show In Combat",
     RANGE_INCLUDE_FRIENDLIES = "Include Friendlies",
+    RANGE_HIDE_SUFFIX = "Hide Suffix",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

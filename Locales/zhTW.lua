@@ -511,6 +511,7 @@ ns:RegisterLocale("zhTW", {
     RANGE_ENABLE = "啟用距離檢查",
     RANGE_COMBAT_ONLY = "只在戰鬥中顯示",
     RANGE_INCLUDE_FRIENDLIES = "包含友方",
+    RANGE_HIDE_SUFFIX = "隱藏後綴",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS

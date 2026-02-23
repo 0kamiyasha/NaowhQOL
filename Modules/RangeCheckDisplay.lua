@@ -126,14 +126,15 @@ local function TickRangeCheck()
             rangeFrame:Hide()
         else
             local minRange, maxRange = RangeLib:GetRange("target")
+            local suffix = db.hideSuffix and "" or " yd"
             if minRange and maxRange then
-                rangeLabel:SetText(minRange .. "-" .. maxRange .. " yd")
+                rangeLabel:SetText(minRange .. "-" .. maxRange .. suffix)
             elseif maxRange then
-                rangeLabel:SetText("0-" .. maxRange .. " yd")
+                rangeLabel:SetText("0-" .. maxRange .. suffix)
             elseif minRange then
-                rangeLabel:SetText(minRange .. "+ yd")
+                rangeLabel:SetText(minRange .. "+" .. suffix)
             else
-                rangeLabel:SetText("-- yd")
+                rangeLabel:SetText("--" .. suffix)
             end
             rangeLabel:SetTextColor(GetColorForRange(minRange))
             if not db.rangeUnlock then

@@ -511,6 +511,7 @@ ns:RegisterLocale("deDE", {
     RANGE_ENABLE = "Reichweitenprüfung aktivieren",
     RANGE_COMBAT_ONLY = "Nur im Kampf anzeigen",
     RANGE_INCLUDE_FRIENDLIES = "Freundliche einbeziehen",
+    RANGE_HIDE_SUFFIX = "Suffix ausblenden",
 
     ---------------------------------------------------------------------------
     -- SLASH COMMANDS
