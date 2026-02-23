@@ -249,10 +249,10 @@ function petFrame:UpdateDisplay()
         warningLabel:SetTextColor(r, g, b)
     elseif warning == WARNING_PASSIVE then
         warningLabel:SetText(db.passiveText or L["PETTRACKER_PASSIVE_DEFAULT"])
-        warningLabel:SetTextColor(1, 0.5, 0)  -- Orange for passive
+        warningLabel:SetTextColor(r, g, b)
     elseif warning == WARNING_WRONG_PET then
         warningLabel:SetText(db.wrongPetText or L["PETTRACKER_WRONGPET_DEFAULT"])
-        warningLabel:SetTextColor(1, 0.3, 0.3)  -- Light red for wrong pet
+        warningLabel:SetTextColor(r, g, b)
     end
 
     petFrame:Show()
