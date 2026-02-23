@@ -674,6 +674,7 @@ eventFrame = CreateFrame("Frame", "NaowhQOL_DragonridingEvents")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_LOGOUT")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
 eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_LOGIN" then
@@ -706,6 +707,17 @@ eventFrame:SetScript("OnEvent", function(self, event)
         elseif pendingCdmHide then
             pendingCdmHide = false
             HideCooldownManager()
+        end
+        return
+    end
+
+    if event == "PLAYER_SPECIALIZATION_CHANGED" then
+        if Get("matchAnchorWidth") and uiBuilt then
+            C_Timer.After(0.2, function()
+                if mainFrame then
+                    UpdateLayout()
+                end
+            end)
         end
         return
     end
