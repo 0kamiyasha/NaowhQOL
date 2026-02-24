@@ -589,19 +589,51 @@ CheckMovementCooldown = function()
         return
     end
 
-    -- Find the spell on CD with shortest remaining time
+    -- Find the spell on CD with shortest remaining time.
+    -- Show the alert as long as ANY spell is on real cooldown, displaying
+    -- the one that will be ready soonest so the player knows what's coming back first.
+    -- However, if any spell is fully available (off CD with charges), we still show
+    -- the remaining on-CD spells so the player can see all pending cooldowns.
     local bestCdInfo = nil
     local bestEntry = nil
 
     for _, entry in ipairs(cachedMovementSpells) do
         local cdInfo = C_Spell.GetSpellCooldown(entry.spellId)
+        local chargeInfo = C_Spell.GetSpellCharges(entry.spellId)
+
         if DEBUG_MODE then
             print("[MovementAlert] Checking:", entry.spellId, entry.spellName,
                   "cdInfo:", cdInfo and "exists" or "nil",
-                  "isOnGCD:", cdInfo and cdInfo.isOnGCD)
+                  "isOnGCD:", cdInfo and cdInfo.isOnGCD,
+                  "charges:", chargeInfo and chargeInfo.currentCharges or "N/A")
         end
-        -- isOnGCD: nil for double jumps, true for GCD, false for actual cooldown
-        if cdInfo and cdInfo.isOnGCD == false and cdInfo.timeUntilEndOfStartRecovery then
+
+        local isOnRealCd = false
+
+        if chargeInfo and chargeInfo.maxCharges and chargeInfo.maxCharges > 1 then
+            -- True charge-based spell (e.g. Roll): only "on cooldown" when zero charges remain
+            if chargeInfo.currentCharges == 0 and chargeInfo.cooldownDuration > 0 then
+                isOnRealCd = true
+                cdInfo = {
+                    startTime = chargeInfo.cooldownStartTime,
+                    duration = chargeInfo.cooldownDuration,
+                    timeUntilEndOfStartRecovery = chargeInfo.cooldownStartTime + chargeInfo.cooldownDuration - GetTime(),
+                    isOnGCD = false,
+                    modRate = chargeInfo.chargeModRate or 1,
+                }
+            end
+            -- If charges > 0, spell is available → not on CD, skip it
+        else
+            -- Non-charge spell (or maxCharges == 1): check standard cooldown
+            -- Use isOnGCD ~= true (not == false) because isOnGCD can be nil for some spells
+            -- Also verify duration > 1.5 to exclude GCD-only returns
+            if cdInfo and cdInfo.isOnGCD ~= true and cdInfo.duration and cdInfo.duration > 1.5
+               and cdInfo.timeUntilEndOfStartRecovery and cdInfo.timeUntilEndOfStartRecovery > 0 then
+                isOnRealCd = true
+            end
+        end
+
+        if isOnRealCd and cdInfo.timeUntilEndOfStartRecovery then
             if not bestCdInfo or cdInfo.timeUntilEndOfStartRecovery < bestCdInfo.timeUntilEndOfStartRecovery then
                 bestCdInfo = cdInfo
                 bestEntry = entry
