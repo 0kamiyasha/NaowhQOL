@@ -49,6 +49,7 @@ local DEFAULTS = {
     borderColorR = 0, borderColorG = 0, borderColorB = 0, borderAlpha = 1, borderSize = 1,
     iconBorderColorR = 0, iconBorderColorG = 0, iconBorderColorB = 0, iconBorderAlpha = 1, iconBorderSize = 1,
     hideCdmWhileMounted = false,
+    hideBcmWhileMounted = false,
 }
 
 -- Get config value with default fallback
@@ -73,6 +74,8 @@ local surgeFrame, surgeCooldown, surgeBorder
 local eventFrame
 local pendingCdmShow = false
 local pendingCdmHide = false
+local pendingBcmShow = false
+local pendingBcmHide = false
 
 local function IsEnabled()
     return NaowhQOL.dragonriding and NaowhQOL.dragonriding.enabled
@@ -401,6 +404,35 @@ local function ShowCooldownManager()
     end
 end
 
+local bcmHidden = false
+local function HideBCM()
+    if bcmHidden then return end
+    local success = pcall(function()
+        bcmHidden = true
+        if BCDM_PowerBar then BCDM_PowerBar:SetAlpha(0) end
+        if BCDM_SecondaryPowerBar then BCDM_SecondaryPowerBar:SetAlpha(0) end
+    end)
+    if not success and InCombatLockdown() then
+        bcmHidden = false
+        pendingBcmHide = true
+        pendingBcmShow = false
+    end
+end
+
+local function ShowBCM()
+    if not bcmHidden then return end
+    local success = pcall(function()
+        bcmHidden = false
+        if BCDM_PowerBar then BCDM_PowerBar:SetAlpha(1) end
+        if BCDM_SecondaryPowerBar then BCDM_SecondaryPowerBar:SetAlpha(1) end
+    end)
+    if not success and InCombatLockdown() then
+        bcmHidden = true
+        pendingBcmShow = true
+        pendingBcmHide = false
+    end
+end
+
 local OnUpdate = ns.PerfMonitor:Wrap("Dragonriding", function(self, dt)
     elapsed = elapsed + dt
     if elapsed < THROTTLE then return end
@@ -417,6 +449,9 @@ local OnUpdate = ns.PerfMonitor:Wrap("Dragonriding", function(self, dt)
         if Get("hideCdmWhileMounted") then
             ShowCooldownManager()
         end
+        if Get("hideBcmWhileMounted") then
+            ShowBCM()
+        end
         return
     end
 
@@ -429,6 +464,9 @@ local OnUpdate = ns.PerfMonitor:Wrap("Dragonriding", function(self, dt)
         if Get("hideCdmWhileMounted") then
             ShowCooldownManager()
         end
+        if Get("hideBcmWhileMounted") then
+            ShowBCM()
+        end
         return
     end
 
@@ -437,6 +475,9 @@ local OnUpdate = ns.PerfMonitor:Wrap("Dragonriding", function(self, dt)
 
     if Get("hideCdmWhileMounted") then
         HideCooldownManager()
+    end
+    if Get("hideBcmWhileMounted") then
+        HideBCM()
     end
 
     UpdateSpeedBar(GetForwardSpeed())
@@ -697,6 +738,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
 
     if event == "PLAYER_LOGOUT" then
         ShowCooldownManager()
+        ShowBCM()
         return
     end
 
@@ -707,6 +749,13 @@ eventFrame:SetScript("OnEvent", function(self, event)
         elseif pendingCdmHide then
             pendingCdmHide = false
             HideCooldownManager()
+        end
+        if pendingBcmShow then
+            pendingBcmShow = false
+            ShowBCM()
+        elseif pendingBcmHide then
+            pendingBcmHide = false
+            HideBCM()
         end
         return
     end

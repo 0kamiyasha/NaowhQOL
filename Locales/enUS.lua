@@ -226,6 +226,8 @@ ns:RegisterLocale("enUS", {
     DRAGON_HIDE_GROUNDED_DESC = "Hide the display when landed with full vigor",
     DRAGON_HIDE_COOLDOWN = "Hide Cooldown Manager While Mounted",
     DRAGON_HIDE_COOLDOWN_DESC = "Note: Show/hide may fail during combat, use at your own risk.",
+    DRAGON_HIDE_BCM = "Hide BCM Power Bars While Mounted",
+    DRAGON_HIDE_BCM_DESC = "Hides BetterCooldownManager power & secondary power bars while skyriding.",
     DRAGON_SECTION_FEATURES = "FEATURES",
     DRAGON_SECOND_WIND = "Second Wind",
     DRAGON_SECOND_WIND_DESC = "Show Second Wind charges as an underlay",

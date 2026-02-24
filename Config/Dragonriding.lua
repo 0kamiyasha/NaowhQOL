@@ -291,7 +291,16 @@ function ns:InitDragonriding()
             onChange = drRefresh
         })
 
-        behContent:SetHeight(110)
+        W:CreateCheckbox(behContent, {
+            label = L["DRAGON_HIDE_BCM"],
+            db = db, key = "hideBcmWhileMounted",
+            x = 10, y = -105,
+            template = "ChatConfigCheckButtonTemplate",
+            description = L["DRAGON_HIDE_BCM_DESC"],
+            onChange = drRefresh
+        })
+
+        behContent:SetHeight(135)
         behWrap:RecalcHeight()
 
         -- FEATURES section
