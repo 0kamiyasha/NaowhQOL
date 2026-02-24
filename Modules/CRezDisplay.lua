@@ -2,8 +2,6 @@ local addonName, ns = ...
 local L = ns.L
 local W = ns.Widgets
 local MakeSlot = ns.DisplayUtils.MakeSlot
-
-local NAOWH_FONT = ns.DefaultFontPath()
 local REBIRTH_SPELL_ID = 20484
 
 -- State tracking (event-driven, not polled)
@@ -26,7 +24,7 @@ rezSlot.lbl:Hide()  -- No label per spec
 -- Stack count in bottom-right corner
 rezSlot.count = rezSlot:CreateFontString(nil, "OVERLAY")
 rezSlot.count:SetPoint("BOTTOMRIGHT", -2, 2)
-rezSlot.count:SetFont(NAOWH_FONT, 11, "OUTLINE")
+rezSlot.count:SetFont(ns.DefaultFontPath(), 11, "OUTLINE")
 
 local rezUpdateElapsed = 0
 local REZ_UPDATE_INTERVAL = 0.1
@@ -43,10 +41,11 @@ local function UpdateRezDisplay()
     if not db then return end
 
     -- Apply font settings
-    rezSlot.timer:SetFont(NAOWH_FONT, db.timerFontSize or 11, "OUTLINE")
+    local fontPath = ns.Media.ResolveFont(db.font)
+    rezSlot.timer:SetFont(fontPath, db.timerFontSize or 11, "OUTLINE")
     local tcR, tcG, tcB = W.GetEffectiveColor(db, "timerColorR", "timerColorG", "timerColorB", "timerColorUseClassColor")
     rezSlot.timer:SetTextColor(tcR, tcG, tcB, db.timerAlpha or 1)
-    rezSlot.count:SetFont(NAOWH_FONT, db.countFontSize or 11, "OUTLINE")
+    rezSlot.count:SetFont(fontPath, db.countFontSize or 11, "OUTLINE")
     local ccR, ccG, ccB = W.GetEffectiveColor(db, "countColorR", "countColorG", "countColorB", "countColorUseClassColor")
     rezSlot.count:SetTextColor(ccR, ccG, ccB, db.countAlpha or 1)
 

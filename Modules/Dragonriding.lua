@@ -734,19 +734,21 @@ function ns:HideDragonridingPreview()
     end
 end
 
-function ns:RefreshDragonridingLayout()
+function ns:RefreshDragonridingLayout(showPreview)
     if not uiBuilt then
         if not C_PlayerInfo or not C_PlayerInfo.GetGlidingInfo then return end
         BuildUI()
     end
     UpdateLayout()
-    -- Only show preview if module is enabled
+    -- Only show preview if module is enabled AND caller explicitly requests it
     if IsEnabled() then
         -- Re-enable mouse if unlocked
         if mainFrame then
             mainFrame:EnableMouse(Get("unlocked"))
         end
-        ShowPreview()
+        if showPreview then
+            ShowPreview()
+        end
     else
         -- Force hide and disable interaction when disabled
         if mainFrame then

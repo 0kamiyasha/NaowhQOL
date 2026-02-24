@@ -25,7 +25,7 @@ function ns:InitDragonriding()
             W.Colorize(L["DRAGON_SUBTITLE"], C.GRAY))
 
         local function drRefresh()
-            if ns.RefreshDragonridingLayout then ns:RefreshDragonridingLayout() end
+            if ns.RefreshDragonridingLayout then ns:RefreshDragonridingLayout(true) end
         end
 
         -- on/off toggle
@@ -458,7 +458,7 @@ function ns:InitDragonriding()
                     cache.drFrame:SetParent(nil)
                     cache.drFrame = nil
                 end
-                if ns.RefreshDragonridingLayout then ns:RefreshDragonridingLayout() end
+                if ns.RefreshDragonridingLayout then ns:RefreshDragonridingLayout(true) end
             end
         })
         restoreBtn:SetPoint("BOTTOMLEFT", sc, "BOTTOMLEFT", 10, 20)
@@ -467,6 +467,6 @@ function ns:InitDragonriding()
     end)
 
     if ns.RefreshDragonridingLayout then
-        ns:RefreshDragonridingLayout()
+        ns:RefreshDragonridingLayout(true)
     end
 end

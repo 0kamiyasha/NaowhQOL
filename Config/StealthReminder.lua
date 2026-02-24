@@ -70,21 +70,6 @@ function ns:InitStealthReminder()
 
         local RelayoutAll
 
-        -- APPEARANCE
-        local appWrap, appContent = W:CreateCollapsibleSection(stealthSections, {
-            text = L["COMMON_SECTION_APPEARANCE"],
-            startOpen = false,
-            onCollapse = function() if RelayoutAll then RelayoutAll() end end,
-        })
-
-        W:CreateFontPicker(appContent, 10, -5, db.font, function(name)
-            db.font = name
-            refreshAll()
-        end)
-
-        appContent:SetHeight(50)
-        appWrap:RecalcHeight()
-
         -- SETTINGS
         local colWrap, colContent = W:CreateCollapsibleSection(stealthSections, {
             text = L["STEALTH_SECTION_STEALTH"],
@@ -92,10 +77,15 @@ function ns:InitStealthReminder()
             onCollapse = function() if RelayoutAll then RelayoutAll() end end,
         })
 
+        W:CreateFontPicker(colContent, 10, -5, db.font, function(name)
+            db.font = name
+            refreshStealth()
+        end)
+
         W:CreateCheckbox(colContent, {
             label = L["STEALTH_SHOW_STEALTHED"],
             db = db, key = "showStealthed",
-            x = 10, y = -5,
+            x = 10, y = -55,
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshStealth
         })
@@ -103,7 +93,7 @@ function ns:InitStealthReminder()
         W:CreateCheckbox(colContent, {
             label = L["STEALTH_SHOW_NOT"],
             db = db, key = "showNotStealthed",
-            x = 10, y = -29,
+            x = 10, y = -79,
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshStealth
         })
@@ -113,20 +103,20 @@ function ns:InitStealthReminder()
         W:CreateColorPicker(colContent, {
             label = L["STEALTH_COLOR_STEALTHED"], db = db,
             rKey = "stealthR", gKey = "stealthG", bKey = "stealthB",
-            x = G:Col(1), y = -55,
+            x = G:Col(1), y = -105,
             onChange = refreshStealth
         })
 
         W:CreateColorPicker(colContent, {
             label = L["STEALTH_COLOR_NOT"], db = db,
             rKey = "warningR", gKey = "warningG", bKey = "warningB",
-            x = G:Col(2), y = -55,
+            x = G:Col(2), y = -105,
             onChange = refreshStealth
         })
 
         -- Stealth Text input
         local stealthTextLbl = colContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        stealthTextLbl:SetPoint("TOPLEFT", G:Col(1), -95)
+        stealthTextLbl:SetPoint("TOPLEFT", G:Col(1), -145)
         stealthTextLbl:SetText(L["STEALTH_TEXT"])
 
         local stealthTextBox = CreateFrame("EditBox", nil, colContent, "BackdropTemplate")
@@ -152,7 +142,7 @@ function ns:InitStealthReminder()
 
         -- Warning Text input
         local warningTextLbl = colContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        warningTextLbl:SetPoint("TOPLEFT", G:Col(1), -125)
+        warningTextLbl:SetPoint("TOPLEFT", G:Col(1), -175)
         warningTextLbl:SetText(L["STEALTH_WARNING_TEXT"])
 
         local warningTextBox = CreateFrame("EditBox", nil, colContent, "BackdropTemplate")
@@ -178,13 +168,13 @@ function ns:InitStealthReminder()
 
         -- Druid options (child of stealth settings)
         local druidNote = colContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        druidNote:SetPoint("TOPLEFT", G:Col(1), -155)
+        druidNote:SetPoint("TOPLEFT", G:Col(1), -205)
         druidNote:SetText(L["STEALTH_DRUID_NOTE"])
 
         W:CreateCheckbox(colContent, {
             label = L["STEALTH_BALANCE"],
             db = db, key = "enableBalance",
-            x = G:Col(1), y = -175,
+            x = G:Col(1), y = -225,
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshStealth
         })
@@ -192,7 +182,7 @@ function ns:InitStealthReminder()
         W:CreateCheckbox(colContent, {
             label = L["STEALTH_GUARDIAN"],
             db = db, key = "enableGuardian",
-            x = G:Col(1), y = -199,
+            x = G:Col(1), y = -249,
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshStealth
         })
@@ -200,12 +190,12 @@ function ns:InitStealthReminder()
         W:CreateCheckbox(colContent, {
             label = L["STEALTH_RESTORATION"],
             db = db, key = "enableResto",
-            x = G:Col(1), y = -223,
+            x = G:Col(1), y = -273,
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshStealth
         })
 
-        colContent:SetHeight(255)
+        colContent:SetHeight(305)
         colWrap:RecalcHeight()
 
         -- ============================================================
@@ -272,16 +262,21 @@ function ns:InitStealthReminder()
             onCollapse = function() if RelayoutAll then RelayoutAll() end end,
         })
 
+        W:CreateFontPicker(stColContent, 10, -5, db.stanceFont or db.font, function(name)
+            db.stanceFont = name
+            refreshStance()
+        end)
+
         W:CreateColorPicker(stColContent, {
             label = L["COMMON_LABEL_TEXT_COLOR"], db = db,
             rKey = "stanceWarnR", gKey = "stanceWarnG", bKey = "stanceWarnB",
-            x = 10, y = -5,
+            x = 10, y = -55,
             onChange = refreshStance
         })
 
         -- Wrong Stance Text input
         local stanceTextLbl = stColContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        stanceTextLbl:SetPoint("TOPLEFT", 10, -45)
+        stanceTextLbl:SetPoint("TOPLEFT", 10, -95)
         stanceTextLbl:SetText(L["STEALTH_WARNING_TEXT"])
 
         local stanceTextBox = CreateFrame("EditBox", nil, stColContent, "BackdropTemplate")
@@ -308,30 +303,30 @@ function ns:InitStealthReminder()
         W:CreateCheckbox(stColContent, {
             label = L["STEALTH_ENABLE_SOUND"],
             db = db, key = "stanceSoundEnabled",
-            x = 10, y = -80,
+            x = 10, y = -130,
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshStance
         })
 
-        W:CreateSoundPicker(stColContent, 10, -110, db.stanceSound or ns.Media.DEFAULT_SOUND,
+        W:CreateSoundPicker(stColContent, 10, -160, db.stanceSound or ns.Media.DEFAULT_SOUND,
             function(sound) db.stanceSound = sound end)
 
         local intervalSlider = W:CreateSlider(stColContent, {
             label = L["STEALTH_REPEAT"],
             min = 0, max = 15, step = 1,
-            x = 10, y = -155,
+            x = 10, y = -205,
             db = db, key = "stanceSoundInterval",
             onChange = function(val) db.stanceSoundInterval = val end
         })
 
-        stColContent:SetHeight(200)
+        stColContent:SetHeight(250)
         stColWrap:RecalcHeight()
 
         -- ============================================================
         -- Layout
         -- ============================================================
 
-        local stealthSectionList = { appWrap, colWrap }
+        local stealthSectionList = { colWrap }
         local stanceSectionList = { stColWrap }
 
         RelayoutAll = function()

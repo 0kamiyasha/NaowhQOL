@@ -39,7 +39,7 @@ healthBar:SetValue(100)
 
 -- Name text overlay
 local nameText = healthBar:CreateFontString(nil, "OVERLAY")
-nameText:SetFont(ns.DefaultFontPath(), 12, "OUTLINE")
+nameText:SetFont(ns.DefaultFontPath(), 12, "OUTLINE")  -- Initial font; updated in UpdateHealth/UpdateDisplay
 nameText:SetPoint("CENTER", healthBar, "CENTER", 0, 0)
 
 -- Find the other tank in raid
@@ -116,7 +116,7 @@ local function UpdateHealth()
                 name = string.sub(name, 1, db.nameLength)
             end
             nameText:SetText(name)
-            nameText:SetFont(ns.DefaultFontPath(), db.nameFontSize or 12, "OUTLINE")
+            nameText:SetFont(ns.Media.ResolveFont(db.font), db.nameFontSize or 12, "OUTLINE")
             if db.nameColorUseClassColor then
                 local _, class = UnitClass(currentOtherTank)
                 if class then
@@ -187,7 +187,7 @@ local function UpdateDisplay()
                     previewName = string.sub(previewName, 1, db.nameLength)
                 end
                 nameText:SetText(previewName)
-                nameText:SetFont(ns.DefaultFontPath(), db.nameFontSize or 12, "OUTLINE")
+                nameText:SetFont(ns.Media.ResolveFont(db.font), db.nameFontSize or 12, "OUTLINE")
                 nameText:SetTextColor(db.nameColorR or 1, db.nameColorG or 1, db.nameColorB or 1)
                 nameText:Show()
             else

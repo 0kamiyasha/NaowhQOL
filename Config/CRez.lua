@@ -78,64 +78,70 @@ function ns:InitCRez()
 
         local G = ns.Layout:New(2)
 
-        -- Row 1: Icon Size
+        -- Row 1: Font Picker
+        W:CreateFontPicker(rezAppContent, G:Col(1), G:Row(1), db.font, function(name)
+            db.font = name
+            refreshRez()
+        end)
+
+        -- Row 2: Icon Size
         local iconSlider = W:CreateAdvancedSlider(rezAppContent,
-            W.Colorize(L["CREZ_ICON_SIZE"] or "Icon Size", C.ORANGE), 24, 80, G:Row(1), 1, false,
+            W.Colorize(L["CREZ_ICON_SIZE"] or "Icon Size", C.ORANGE), 24, 80, G:Row(2), 1, false,
             function(val) db.iconSize = val; refreshRez() end,
             { db = db, key = "iconSize", moduleName = "cRez" })
-        PlaceSlider(iconSlider, rezAppContent, G:Col(1), G:SliderY(1))
+        PlaceSlider(iconSlider, rezAppContent, G:Col(1), G:SliderY(2))
 
-        -- Row 2: Timer Font Size / Timer Color
+        -- Row 3: Timer Font Size / Timer Color
         local timerLbl = rezAppContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        timerLbl:SetPoint("TOPLEFT", 10, G:Row(2) + 15)
+        timerLbl:SetPoint("TOPLEFT", 10, G:Row(3) + 15)
         timerLbl:SetText(W.Colorize(L["CREZ_TIMER_LABEL"] or "Timer Text", C.BLUE))
 
         local timerSizeSlider = W:CreateAdvancedSlider(rezAppContent,
-            W.Colorize(L["COMMON_FONT_SIZE"] or "Font Size", C.ORANGE), 8, 24, G:Row(2), 1, false,
+            W.Colorize(L["COMMON_FONT_SIZE"] or "Font Size", C.ORANGE), 8, 24, G:Row(3), 1, false,
             function(val) db.timerFontSize = val; refreshRez() end,
             { db = db, key = "timerFontSize", moduleName = "cRez" })
-        PlaceSlider(timerSizeSlider, rezAppContent, G:Col(1), G:SliderY(2))
+        PlaceSlider(timerSizeSlider, rezAppContent, G:Col(1), G:SliderY(3))
 
         W:CreateColorPicker(rezAppContent, {
             label = L["COMMON_COLOR"] or "Color", db = db,
             rKey = "timerColorR", gKey = "timerColorG", bKey = "timerColorB",
-            x = G:Col(2), y = G:ColorY(2),
+            x = G:Col(2), y = G:ColorY(3),
             onChange = refreshRez
         })
 
-        -- Row 3: Timer Alpha
+        -- Row 4: Timer Alpha
         local timerAlphaSlider = W:CreateAdvancedSlider(rezAppContent,
-            W.Colorize(L["COMMON_ALPHA"] or "Alpha", C.ORANGE), 0, 100, G:Row(3), 5, true,
+            W.Colorize(L["COMMON_ALPHA"] or "Alpha", C.ORANGE), 0, 100, G:Row(4), 5, true,
             function(val) db.timerAlpha = val / 100; refreshRez() end,
             { value = (db.timerAlpha or 1.0) * 100 })
-        PlaceSlider(timerAlphaSlider, rezAppContent, G:Col(1), G:SliderY(3))
+        PlaceSlider(timerAlphaSlider, rezAppContent, G:Col(1), G:SliderY(4))
 
-        -- Row 4: Stack Count Font Size / Stack Color
+        -- Row 5: Stack Count Font Size / Stack Color
         local countLbl = rezAppContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        countLbl:SetPoint("TOPLEFT", 10, G:Row(4) + 15)
+        countLbl:SetPoint("TOPLEFT", 10, G:Row(5) + 15)
         countLbl:SetText(W.Colorize(L["CREZ_COUNT_LABEL"] or "Stack Count", C.BLUE))
 
         local countSizeSlider = W:CreateAdvancedSlider(rezAppContent,
-            W.Colorize(L["COMMON_FONT_SIZE"] or "Font Size", C.ORANGE), 8, 24, G:Row(4), 1, false,
+            W.Colorize(L["COMMON_FONT_SIZE"] or "Font Size", C.ORANGE), 8, 24, G:Row(5), 1, false,
             function(val) db.countFontSize = val; refreshRez() end,
             { db = db, key = "countFontSize", moduleName = "cRez" })
-        PlaceSlider(countSizeSlider, rezAppContent, G:Col(1), G:SliderY(4))
+        PlaceSlider(countSizeSlider, rezAppContent, G:Col(1), G:SliderY(5))
 
         W:CreateColorPicker(rezAppContent, {
             label = L["COMMON_COLOR"] or "Color", db = db,
             rKey = "countColorR", gKey = "countColorG", bKey = "countColorB",
-            x = G:Col(2), y = G:ColorY(4),
+            x = G:Col(2), y = G:ColorY(5),
             onChange = refreshRez
         })
 
-        -- Row 5: Stack Alpha
+        -- Row 6: Stack Alpha
         local countAlphaSlider = W:CreateAdvancedSlider(rezAppContent,
-            W.Colorize(L["COMMON_ALPHA"] or "Alpha", C.ORANGE), 0, 100, G:Row(5), 5, true,
+            W.Colorize(L["COMMON_ALPHA"] or "Alpha", C.ORANGE), 0, 100, G:Row(6), 5, true,
             function(val) db.countAlpha = val / 100; refreshRez() end,
             { value = (db.countAlpha or 1.0) * 100 })
-        PlaceSlider(countAlphaSlider, rezAppContent, G:Col(1), G:SliderY(5))
+        PlaceSlider(countAlphaSlider, rezAppContent, G:Col(1), G:SliderY(6))
 
-        rezAppContent:SetHeight(G:Height(5))
+        rezAppContent:SetHeight(G:Height(6))
         rezAppWrap:RecalcHeight()
 
         -- ============================================================

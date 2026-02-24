@@ -248,7 +248,7 @@ function stanceFrame:UpdateDisplay()
         stanceFrame.initialized = true
     end
 
-    local fontPath = ns.Media.ResolveFont(db.font)
+    local fontPath = ns.Media.ResolveFont(db.stanceFont or db.font)
     local fontSize = math.max(10, math.min(72, math.floor(stanceFrame:GetHeight() * 0.55)))
     local success = stanceLabel:SetFont(fontPath, fontSize, "OUTLINE")
     if not success then

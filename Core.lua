@@ -119,7 +119,8 @@ local STEALTH_REMINDER_DEFAULTS = {
     stealthText = "STEALTH", warningText = "RESTEALTH",
     point = "CENTER", x = 0, y = 150, width = 200, height = 40,
     enableBalance = false, enableGuardian = false, enableResto = false,
-    stanceEnabled = false, stanceUnlock = false, stanceWarnR = 1, stanceWarnG = 0.4, stanceWarnB = 0,
+    stanceEnabled = false, stanceUnlock = false, stanceFont = NAOWH_FONT,
+    stanceWarnR = 1, stanceWarnG = 0.4, stanceWarnB = 0,
     stancePoint = "CENTER", stanceX = 0, stanceY = 100, stanceWidth = 200, stanceHeight = 40,
     stanceCombatOnly = false, stanceDisableWhenRested = false, stanceInstanceOnly = false,
     stanceSoundEnabled = false, stanceSound = "Raid Warning", stanceSoundInterval = 3,
@@ -236,7 +237,7 @@ local MOUSE_RING_DEFAULTS = {
 
 local CREZ_DEFAULTS = {
     -- Combat Rez Timer
-    enabled = false, unlock = false,
+    enabled = false, unlock = false, font = NAOWH_FONT,
     point = "CENTER", x = 0, y = 150, iconSize = 40,
     timerFontSize = 11, timerColorR = 1, timerColorG = 1, timerColorB = 1, timerAlpha = 1.0,
     countFontSize = 11, countColorR = 1, countColorG = 1, countColorB = 1, countAlpha = 1.0,
@@ -257,7 +258,7 @@ local PET_TRACKER_DEFAULTS = {
 }
 
 local CO_TANK_DEFAULTS = {
-    enabled = false, unlock = false,
+    enabled = false, unlock = false, font = NAOWH_FONT,
     point = "CENTER", x = 200, y = 0,
     width = 150, height = 20,
     healthColorR = 0, healthColorG = 0.8, healthColorB = 0.2,
@@ -796,13 +797,18 @@ local function InitializeDB()
         NaowhQOL.equipmentReminder.ecSpecRules = NaowhQOL.equipmentReminder.ecSpecRules or {}
     end
 
+    -- Migrate stealth/stance: copy shared font → stanceFont if not yet split
+    if NaowhQOL.stealthReminder and NaowhQOL.stealthReminder.font and not NaowhQOL.stealthReminder.stanceFont then
+        NaowhQOL.stealthReminder.stanceFont = NaowhQOL.stealthReminder.font
+    end
+
     -- Migrate legacy file-path media settings → LSM names
     if ns.Media and ns.Media.MigrateDB then
         ns.Media.MigrateDB(NaowhQOL.combatTimer,    {"font"},                  nil,            nil)
         ns.Media.MigrateDB(NaowhQOL.combatAlert,     {"font"},                  nil,            {"enterSound", "leaveSound"})
         ns.Media.MigrateDB(NaowhQOL.dragonriding,    {"speedFont"},             {"barStyle"},   nil)
         ns.Media.MigrateDB(NaowhQOL.buffTracker,     {"font"},                  nil,            nil)
-        ns.Media.MigrateDB(NaowhQOL.stealthReminder, {"font"},                  nil,            {"stanceSound"})
+        ns.Media.MigrateDB(NaowhQOL.stealthReminder, {"font", "stanceFont"},    nil,            {"stanceSound"})
         ns.Media.MigrateDB(NaowhQOL.movementAlert,   {"font"},                  nil,            {"tsSoundID", "gwSoundID"})
         ns.Media.MigrateDB(NaowhQOL.rangeCheck,      {"rangeFont"},             nil,            nil)
         ns.Media.MigrateDB(NaowhQOL.emoteDetection,  {"font"},                  nil,            {"soundID"})

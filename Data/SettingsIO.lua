@@ -86,7 +86,7 @@ local TYPE_SCHEMAS = {
         point = "string", x = "number", y = "number",
         width = "number", height = "number",
         showStealthed = "boolean", showNotStealthed = "boolean",
-        stanceEnabled = "boolean", stanceUnlock = "boolean",
+        stanceEnabled = "boolean", stanceUnlock = "boolean", stanceFont = "string",
         stanceWarnR = "number", stanceWarnG = "number", stanceWarnB = "number",
         stancePoint = "string", stanceX = "number", stanceY = "number",
         stanceWidth = "number", stanceHeight = "number",
@@ -136,7 +136,7 @@ local TYPE_SCHEMAS = {
         commands = "table",
     },
     cRez = {
-        enabled = "boolean", unlock = "boolean",
+        enabled = "boolean", unlock = "boolean", font = "string",
         point = "string", x = "number", y = "number", iconSize = "number",
         timerFontSize = "number", timerColorR = "number", timerColorG = "number", timerColorB = "number", timerAlpha = "number",
         countFontSize = "number", countColorR = "number", countColorG = "number", countColorB = "number", countAlpha = "number",
@@ -210,7 +210,7 @@ local TYPE_SCHEMAS = {
         ecEnabled = "boolean", ecUseAllSpecs = "boolean", ecSpecRules = "table",
     },
     coTank = {
-        enabled = "boolean", unlock = "boolean",
+        enabled = "boolean", unlock = "boolean", font = "string",
         point = "string", x = "number", y = "number",
         width = "number", height = "number",
         healthColorR = "number", healthColorG = "number", healthColorB = "number",

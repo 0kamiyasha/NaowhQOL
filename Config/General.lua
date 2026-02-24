@@ -38,6 +38,7 @@ local FONT_MODULES = {
     { db = "combatTimer",     key = "font" },
     { db = "combatAlert",     key = "font" },
     { db = "stealthReminder", key = "font" },
+    { db = "stealthReminder", key = "stanceFont" },
     { db = "movementAlert",   key = "font" },
     { db = "rangeCheck",      key = "rangeFont" },
     { db = "emoteDetection",  key = "font" },
@@ -46,6 +47,8 @@ local FONT_MODULES = {
     { db = "buffTracker",     key = "font" },
     { db = "petTracker",      key = "font" },
     { db = "misc",            key = "durabilityFont" },
+    { db = "cRez",            key = "font" },
+    { db = "coTank",          key = "font" },
 }
 
 ---------------------------------------------------------------------------
@@ -199,6 +202,8 @@ function ns:InitGeneral()
                 end
             end
             if ns.SettingsIO then ns.SettingsIO:MarkDirty() end
+            -- Invalidate cached config panels so font pickers refresh
+            W:InvalidateAllCachedPanels()
             RefreshAllModuleDisplays()
             ns:Log(L["GENERAL_GLOBAL_FONT_APPLIED"], "00ff00")
         end)

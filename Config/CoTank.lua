@@ -138,42 +138,48 @@ function ns:InitCoTank()
 
         local NG = ns.Layout:New(2)
 
-        -- Row 1: Use Class Color + Name Color (matches Health Bar layout)
+        -- Row 1: Font Picker
+        W:CreateFontPicker(nameContent, NG:Col(1), NG:Row(1), db.font, function(name)
+            db.font = name
+            refreshDisplay()
+        end)
+
+        -- Row 2: Use Class Color + Name Color (matches Health Bar layout)
         W:CreateCheckbox(nameContent, {
             label = L["COTANK_NAME_USE_CLASS_COLOR"] or "Use Class Color",
             db = db, key = "nameColorUseClassColor",
-            x = NG:Col(1), y = NG:CheckboxY(1),
+            x = NG:Col(1), y = NG:CheckboxY(2),
             onChange = refreshDisplay
         })
 
         W:CreateColorPicker(nameContent, {
             label = L["COTANK_NAME_COLOR"] or "Name Color", db = db,
             rKey = "nameColorR", gKey = "nameColorG", bKey = "nameColorB",
-            x = NG:Col(2), y = NG:Row(1) + 6,
+            x = NG:Col(2), y = NG:Row(2) + 6,
             onChange = refreshDisplay
         })
 
-        -- Row 2: Show Name + Name Format
+        -- Row 3: Show Name + Name Format
         W:CreateCheckbox(nameContent, {
             label = L["COTANK_SHOW_NAME"] or "Show Name",
             db = db, key = "showName",
-            x = NG:Col(1), y = NG:CheckboxY(2),
+            x = NG:Col(1), y = NG:CheckboxY(3),
             onChange = refreshDisplay
         })
 
         W:CreateDropdown(nameContent, {
             label = L["COTANK_NAME_FORMAT"] or "Name Format",
             db = db, key = "nameFormat",
-            x = NG:Col(2), y = NG:Row(2) + 12,
+            x = NG:Col(2), y = NG:Row(3) + 12,
             options = nameFormatOptions,
             onChange = refreshDisplay
         })
 
-        -- Row 3: Name Length + Font Size
+        -- Row 4: Name Length + Font Size
         W:CreateSlider(nameContent, {
             label = L["COTANK_NAME_LENGTH"] or "Name Length",
             min = 3, max = 12, step = 1,
-            x = NG:Col(1), y = NG:Row(3),
+            x = NG:Col(1), y = NG:Row(4),
             db = db, key = "nameLength",
             onChange = function(val) db.nameLength = val; refreshDisplay() end
         })
@@ -181,12 +187,12 @@ function ns:InitCoTank()
         W:CreateSlider(nameContent, {
             label = L["COTANK_NAME_FONT_SIZE"] or "Font Size",
             min = 8, max = 24, step = 1,
-            x = NG:Col(2), y = NG:Row(3),
+            x = NG:Col(2), y = NG:Row(4),
             db = db, key = "nameFontSize",
             onChange = function(val) db.nameFontSize = val; refreshDisplay() end
         })
 
-        nameContent:SetHeight(NG:Height(3))
+        nameContent:SetHeight(NG:Height(4))
         nameWrap:RecalcHeight()
 
         -- ============================================================

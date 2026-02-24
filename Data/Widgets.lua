@@ -531,6 +531,9 @@ function ns.Widgets:CreateScrollFrame(parent, contentHeight)
     return sf, sc
 end
 
+-- Track all CachedPanel instances for bulk invalidation (e.g. global font apply)
+local cachedPanelRegistry = {}
+
 function ns.Widgets:CachedPanel(cache, key, parent, buildFn)
     if cache[key] then
         cache[key]:Hide()
@@ -540,8 +543,26 @@ function ns.Widgets:CachedPanel(cache, key, parent, buildFn)
         cache[key]:SetAllPoints()
         buildFn(cache[key])
     end
+    -- Register for invalidation
+    cachedPanelRegistry[cache] = cachedPanelRegistry[cache] or {}
+    cachedPanelRegistry[cache][key] = true
     cache[key]:Show()
     return cache[key]
+end
+
+--- Invalidate all cached config panels so they rebuild on next visit.
+--- Called after global operations like "Apply Font to All Modules".
+--- Skips any panel that is currently shown (e.g. the General page).
+function ns.Widgets:InvalidateAllCachedPanels()
+    for cache, keys in pairs(cachedPanelRegistry) do
+        for key in pairs(keys) do
+            if cache[key] and not cache[key]:IsShown() then
+                cache[key]:Hide()
+                cache[key]:SetParent(nil)
+                cache[key] = nil
+            end
+        end
+    end
 end
 
 function ns.Widgets:CreateCheckbox(parent, opts)
