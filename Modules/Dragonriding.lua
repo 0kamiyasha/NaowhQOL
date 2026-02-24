@@ -406,9 +406,9 @@ local function HideCooldownManager()
     local success = pcall(function()
         StashPositionAndReanchor()
         cdmHidden = true
-        if BuffIconCooldownViewer then BuffIconCooldownViewer:Hide() end
-        if EssentialCooldownViewer then EssentialCooldownViewer:Hide() end
-        if UtilityCooldownViewer then UtilityCooldownViewer:Hide() end
+        if BuffIconCooldownViewer then BuffIconCooldownViewer:SetAlpha(0) end
+        if EssentialCooldownViewer then EssentialCooldownViewer:SetAlpha(0) end
+        if UtilityCooldownViewer then UtilityCooldownViewer:SetAlpha(0) end
     end)
     if not success and InCombatLockdown() then
         cdmHidden = false
@@ -421,9 +421,9 @@ local function ShowCooldownManager()
     if not cdmHidden then return end
     local success = pcall(function()
         cdmHidden = false
-        if BuffIconCooldownViewer then BuffIconCooldownViewer:Show() end
-        if EssentialCooldownViewer then EssentialCooldownViewer:Show() end
-        if UtilityCooldownViewer then UtilityCooldownViewer:Show() end
+        if BuffIconCooldownViewer then BuffIconCooldownViewer:SetAlpha(1) end
+        if EssentialCooldownViewer then EssentialCooldownViewer:SetAlpha(1) end
+        if UtilityCooldownViewer then UtilityCooldownViewer:SetAlpha(1) end
         RestoreOriginalAnchor()
     end)
     if not success and InCombatLockdown() then
