@@ -895,10 +895,17 @@ end
 
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGOUT")
 eventFrame:SetScript("OnEvent", function(self, event, name)
-    if name == addonName then
+    if event == "ADDON_LOADED" and name == addonName then
         InitializeDB()
         self:UnregisterEvent("ADDON_LOADED")
+    elseif event == "PLAYER_LOGOUT" then
+        -- Wipe the per-character SavedVariablesPerCharacter global so WoW
+        -- doesn't duplicate the AceDB profile into per-char files.
+        -- Use an empty table (not nil) so other PLAYER_LOGOUT handlers that
+        -- index NaowhQOL.xxx don't error from a nil global.
+        NaowhQOL = {}
     end
 end)
 
