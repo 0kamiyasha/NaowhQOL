@@ -12,10 +12,6 @@ local UNLOCK_BACKDROP = {
     insets = { left = 4, right = 4, top = 4, bottom = 4 },
 }
 
--- Movement abilities by class and spec
--- Used for both cooldown tracking AND Time Spiral proc detection
--- Each class maps spec ID to an ordered list of spell IDs (first known one is used)
--- Optional 'filter' field: spells that suppress glow detection when cast (talent-gated)
 local MOVEMENT_ABILITIES = {
     DEATHKNIGHT = {[250] = {48265}, [251] = {48265}, [252] = {48265}},
     DEMONHUNTER = {
@@ -41,7 +37,6 @@ local MOVEMENT_ABILITIES = {
     WARRIOR = {[71] = {6544}, [72] = {6544}, [73] = {6544}},
 }
 
--- Build lookup tables from class data
 local allMobilitySpells = {}
 
 local function RebuildMobilitySpellLookup()
@@ -55,7 +50,6 @@ local function RebuildMobilitySpellLookup()
             end
         end
     end
-    -- Include custom spells from overrides
     local db = NaowhQOL and NaowhQOL.movementAlert
     if db and db.spellOverrides then
         for spellId, override in pairs(db.spellOverrides) do
@@ -68,7 +62,6 @@ end
 
 RebuildMobilitySpellLookup()
 
--- Glow validation state
 local glowCooldown = 0
 local procDebounce = 0
 local castFilters = {}
@@ -113,12 +106,10 @@ movementFrame:SetSize(200, 40)
 movementFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
 movementFrame:Hide()
 
--- Text display (for text mode)
 local movementText = movementFrame:CreateFontString(nil, "OVERLAY")
 movementText:SetFont(ns.DefaultFontPath(), 24, "OUTLINE")
 movementText:SetPoint("CENTER")
 
--- Icon display (for icon mode)
 local movementIcon = CreateFrame("Frame", nil, movementFrame)
 movementIcon:SetSize(40, 40)
 movementIcon:SetPoint("CENTER")
@@ -134,7 +125,6 @@ movementIcon.cooldown:SetAllPoints(movementIcon.tex)
 movementIcon.cooldown:SetDrawEdge(false)
 movementIcon:Hide()
 
--- Bar display (for bar mode)
 local movementBar = CreateFrame("StatusBar", nil, movementFrame)
 movementBar:SetSize(150, 20)
 movementBar:SetPoint("CENTER")
@@ -154,13 +144,11 @@ movementBar.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 movementBar:Hide()
 
 local movementResizeHandle
-local cachedMovementSpells = {} -- Array of {spellId, spellName, spellIcon, customText}
-
--- Timer handles for countdown updates
+local cachedMovementSpells = {}
+local cachedChargeCount = {}
+local rechargeTimers = {}
 local movementCountdownTimer = nil
 local timeSpiralCountdownTimer = nil
-
--- Forward declarations for self-referencing functions
 local CheckMovementCooldown
 local UpdateEventRegistration
 
@@ -221,7 +209,6 @@ local function GetPlayerMovementSpells()
     local result = {}
     local seen = {}
 
-    -- Add default spells (if not disabled via override)
     for _, spellId in ipairs(specAbilities) do
         if not seen[spellId] then
             local override = overrides[spellId]
@@ -229,12 +216,16 @@ local function GetPlayerMovementSpells()
                 if IsPlayerSpell(spellId) then
                     seen[spellId] = true
                     local spellInfo = C_Spell.GetSpellInfo(spellId)
+                    local chargeInfo = C_Spell.GetSpellCharges(spellId)
                     if spellInfo then
                         table.insert(result, {
                             spellId = spellId,
                             spellName = spellInfo.name,
                             spellIcon = spellInfo.iconID,
                             customText = override and override.customText ~= "" and override.customText or nil,
+                            isChargeSpell = chargeInfo and chargeInfo.maxCharges and chargeInfo.maxCharges > 1 or false,
+                            maxCharges = chargeInfo and chargeInfo.maxCharges or 1,
+                            rechargeDuration = chargeInfo and chargeInfo.cooldownDuration or 0,
                         })
                     end
                 end
@@ -242,18 +233,21 @@ local function GetPlayerMovementSpells()
         end
     end
 
-    -- Add custom (user-added) spells for this class
     for spellId, override in pairs(overrides) do
         if not seen[spellId] and override.class == class and override.enabled ~= false then
             if IsPlayerSpell(spellId) then
                 seen[spellId] = true
                 local spellInfo = C_Spell.GetSpellInfo(spellId)
+                local chargeInfo = C_Spell.GetSpellCharges(spellId)
                 if spellInfo then
                     table.insert(result, {
                         spellId = spellId,
                         spellName = spellInfo.name,
                         spellIcon = spellInfo.iconID,
                         customText = override.customText ~= "" and override.customText or nil,
+                        isChargeSpell = chargeInfo and chargeInfo.maxCharges and chargeInfo.maxCharges > 1 or false,
+                        maxCharges = chargeInfo and chargeInfo.maxCharges or 1,
+                        rechargeDuration = chargeInfo and chargeInfo.cooldownDuration or 0,
                     })
                 end
             end
@@ -261,6 +255,18 @@ local function GetPlayerMovementSpells()
     end
 
     return result
+end
+
+local function UpdateCachedCharges()
+    if inCombat then return end
+    for _, entry in ipairs(cachedMovementSpells) do
+        if entry.isChargeSpell then
+            local chargeInfo = C_Spell.GetSpellCharges(entry.spellId)
+            if chargeInfo then
+                cachedChargeCount[entry.spellId] = chargeInfo.currentCharges
+            end
+        end
+    end
 end
 
 local function CacheMovementSpells()
@@ -273,10 +279,52 @@ local function CacheMovementSpells()
     end
 
     cachedMovementSpells = GetPlayerMovementSpells()
+    UpdateCachedCharges()
+
     if DEBUG_MODE then
         print("[MovementAlert] Cached", #cachedMovementSpells, "spells")
         for _, entry in ipairs(cachedMovementSpells) do
-            print("  -", entry.spellId, entry.spellName, entry.customText or "(default)")
+            print("  -", entry.spellId, entry.spellName,
+                entry.customText or "(default)",
+                entry.isChargeSpell and ("charges:" .. (cachedChargeCount[entry.spellId] or "?")) or "")
+        end
+    end
+end
+
+local function CancelAllRechargeTimers()
+    for _, timer in pairs(rechargeTimers) do
+        timer:Cancel()
+    end
+    wipe(rechargeTimers)
+end
+
+local function StartRechargeTimer(entry)
+    if rechargeTimers[entry.spellId] then return end
+    local duration = entry.rechargeDuration or 0
+    if duration <= 0 then return end
+    rechargeTimers[entry.spellId] = C_Timer.NewTimer(duration, function()
+        rechargeTimers[entry.spellId] = nil
+        local cur = cachedChargeCount[entry.spellId] or 0
+        local max = entry.maxCharges or 1
+        cachedChargeCount[entry.spellId] = math.min(cur + 1, max)
+        if cachedChargeCount[entry.spellId] < max then
+            StartRechargeTimer(entry)
+        end
+        if CheckMovementCooldown then CheckMovementCooldown() end
+    end)
+end
+
+local function OnChargeSpellUsed(spellId)
+    if not inCombat then return end
+    for _, entry in ipairs(cachedMovementSpells) do
+        if entry.spellId == spellId and entry.isChargeSpell then
+            local cur = cachedChargeCount[spellId]
+            if cur == nil then cur = entry.maxCharges or 1 end
+            cachedChargeCount[spellId] = math.max(0, cur - 1)
+            if not rechargeTimers[spellId] then
+                StartRechargeTimer(entry)
+            end
+            return
         end
     end
 end
@@ -350,7 +398,6 @@ function movementFrame:UpdateDisplay()
     local frameW = movementFrame:GetWidth()
     local frameH = movementFrame:GetHeight()
 
-    -- Text mode font sizing
     local fontSize = math.max(10, math.min(72, math.floor(frameH * 0.55)))
     local success = movementText:SetFont(fontPath, fontSize, "OUTLINE")
     if not success then
@@ -359,7 +406,6 @@ function movementFrame:UpdateDisplay()
     local tR, tG, tB = W.GetEffectiveColor(db, "textColorR", "textColorG", "textColorB", "textColorUseClassColor")
     movementText:SetTextColor(tR, tG, tB)
 
-    -- Bar mode sizing - scale with frame
     local barH = math.max(12, math.floor(frameH * 0.5))
     local barIconSize = barH
     local barW = frameW - (db.barShowIcon ~= false and (barIconSize + 8) or 0) - 10
@@ -368,13 +414,11 @@ function movementFrame:UpdateDisplay()
     local barFontSize = math.max(8, math.min(24, math.floor(barH * 0.6)))
     movementBar.text:SetFont(fontPath, barFontSize, "OUTLINE")
 
-    -- Icon mode sizing - scale with frame (use smaller dimension to stay square)
     local iconSize = math.max(20, math.min(frameW, frameH) - 4)
     movementIcon:SetSize(iconSize, iconSize)
     movementIcon.tex:SetPoint("TOPLEFT", 2, -2)
     movementIcon.tex:SetPoint("BOTTOMRIGHT", -2, 2)
 
-    -- Update event registration when display is refreshed (enables/disables events)
     UpdateEventRegistration()
     if db.enabled and not db.unlock then
         CheckMovementCooldown()
@@ -398,7 +442,6 @@ function timeSpiralFrame:UpdateDisplay()
         timeSpiralText:SetText("TIME SPIRAL")
         timeSpiralFrame:Show()
     elseif timeSpiralActiveTime then
-        -- Countdown is running; leave text and visibility alone
         timeSpiralFrame:SetBackdrop(nil)
         if timeSpiralResizeHandle then timeSpiralResizeHandle:Hide() end
     else
@@ -426,8 +469,6 @@ function timeSpiralFrame:UpdateDisplay()
     end
     local tsR, tsG, tsB = W.GetEffectiveColor(db, "tsColorR", "tsColorG", "tsColorB", "tsColorUseClassColor")
     timeSpiralText:SetTextColor(tsR, tsG, tsB)
-
-    -- Update event registration when display is refreshed
     UpdateEventRegistration()
 end
 
@@ -472,8 +513,6 @@ function gatewayFrame:UpdateDisplay()
     end
     local gwR, gwG, gwB = W.GetEffectiveColor(db, "gwColorR", "gwColorG", "gwColorB", "gwColorUseClassColor")
     gatewayText:SetTextColor(gwR, gwG, gwB)
-
-    -- Update event registration when display is refreshed
     UpdateEventRegistration()
 end
 
@@ -493,8 +532,6 @@ local function HideMovementDisplay()
     CancelMovementCountdown()
 end
 
--- Show movement cooldown display (no arithmetic on secret values)
--- Secret values can be passed to string.format and SetText, just not used in arithmetic
 local function ShowMovementDisplay(cdInfo, spellEntry)
     local db = NaowhQOL.movementAlert
     if not db then return end
@@ -504,45 +541,36 @@ local function ShowMovementDisplay(cdInfo, spellEntry)
     local spellName = spellEntry.customText or spellEntry.spellName or L["MOVEMENT_ALERT_FALLBACK"] or "Movement"
     local spellIcon = spellEntry.spellIcon
 
-    -- Hide all elements first
     movementText:Hide()
     movementIcon:Hide()
     movementBar:Hide()
 
     if displayMode == "text" then
-        -- Text mode: convert format to use %s placeholder, then pass secret value to SetFormattedText
-        -- Cannot use gsub with secret string as replacement - must pass directly to API
         local textFormat = db.textFormat or "%ts\nNo %a"
         local fmtStr = textFormat:gsub("\\n", "\n"):gsub("%%a", spellName):gsub("%%t", "%%s")
         movementText:SetFormattedText(fmtStr, string.format("%." .. precision .. "f", cdInfo.timeUntilEndOfStartRecovery))
         movementText:Show()
     elseif displayMode == "icon" then
-        -- Icon mode: use cooldown frame with SetCooldown (AllowedWhenTainted)
         if spellIcon then
             movementIcon.tex:SetTexture(spellIcon)
             movementIcon.cooldown:SetCooldown(cdInfo.startTime, cdInfo.duration, cdInfo.modRate or 1)
             movementIcon.cooldown:SetHideCountdownNumbers(false)
             movementIcon:Show()
         else
-            -- Fallback to text if no icon
             local textFormat = db.textFormat or "%ts\nNo %a"
             local fmtStr = textFormat:gsub("\\n", "\n"):gsub("%%a", spellName):gsub("%%t", "%%s")
             movementText:SetFormattedText(fmtStr, string.format("%." .. precision .. "f", cdInfo.timeUntilEndOfStartRecovery))
             movementText:Show()
         end
     elseif displayMode == "bar" then
-        -- Bar mode: pass secret values directly to StatusBar (AllowedWhenTainted)
-        -- SetMinMaxValues and SetValue don't require arithmetic
         movementBar:SetMinMaxValues(0, cdInfo.duration)
         movementBar:SetValue(cdInfo.timeUntilEndOfStartRecovery)
         local barR, barG, barB = W.GetEffectiveColor(db, "textColorR", "textColorG", "textColorB", "textColorUseClassColor")
         movementBar:SetStatusBarColor(barR, barG, barB)
 
-        -- Timer text - use secret value in string.format (allowed)
         local timeStr = string.format("%." .. precision .. "f", cdInfo.timeUntilEndOfStartRecovery)
         movementBar.text:SetText(timeStr)
 
-        -- Optional icon
         if db.barShowIcon ~= false and spellIcon then
             movementBar.icon:SetTexture(spellIcon)
             movementBar.icon:Show()
@@ -560,21 +588,18 @@ CheckMovementCooldown = function()
     local db = NaowhQOL.movementAlert
     if not db then return end
 
-    -- Skip if module disabled
     if not db.enabled then
         if DEBUG_MODE then print("[MovementAlert] Module disabled") end
         HideMovementDisplay()
         return
     end
 
-    -- Skip if combat-only and not in combat
     if db.combatOnly and not inCombat and not db.unlock then
         if DEBUG_MODE then print("[MovementAlert] Combat-only mode, not in combat") end
         HideMovementDisplay()
         return
     end
 
-    -- Skip if current class is disabled
     local playerClass = select(2, UnitClass("player"))
     if db.disabledClasses and db.disabledClasses[playerClass] then
         if DEBUG_MODE then print("[MovementAlert] Class disabled:", playerClass) end
@@ -582,59 +607,37 @@ CheckMovementCooldown = function()
         return
     end
 
-    -- Skip if no cached movement spells
     if #cachedMovementSpells == 0 then
         if DEBUG_MODE then print("[MovementAlert] No cached spells") end
         HideMovementDisplay()
         return
     end
 
-    -- Find the spell on CD with shortest remaining time.
-    -- Show the alert as long as ANY spell is on real cooldown, displaying
-    -- the one that will be ready soonest so the player knows what's coming back first.
-    -- However, if any spell is fully available (off CD with charges), we still show
-    -- the remaining on-CD spells so the player can see all pending cooldowns.
     local bestCdInfo = nil
     local bestEntry = nil
 
     for _, entry in ipairs(cachedMovementSpells) do
         local cdInfo = C_Spell.GetSpellCooldown(entry.spellId)
-        local chargeInfo = C_Spell.GetSpellCharges(entry.spellId)
 
         if DEBUG_MODE then
             print("[MovementAlert] Checking:", entry.spellId, entry.spellName,
                   "cdInfo:", cdInfo and "exists" or "nil",
-                  "isOnGCD:", cdInfo and cdInfo.isOnGCD,
-                  "charges:", chargeInfo and chargeInfo.currentCharges or "N/A")
+                  "isOnGCD:", cdInfo and tostring(cdInfo.isOnGCD) or "N/A",
+                  "charge:", entry.isChargeSpell and "yes" or "no")
         end
 
-        local isOnRealCd = false
+        if cdInfo and cdInfo.isOnGCD ~= true and cdInfo.timeUntilEndOfStartRecovery then
+            local showThis = true
 
-        if chargeInfo and chargeInfo.maxCharges and chargeInfo.maxCharges > 1 then
-            -- True charge-based spell (e.g. Roll): only "on cooldown" when zero charges remain
-            if chargeInfo.currentCharges == 0 and chargeInfo.cooldownDuration > 0 then
-                isOnRealCd = true
-                cdInfo = {
-                    startTime = chargeInfo.cooldownStartTime,
-                    duration = chargeInfo.cooldownDuration,
-                    timeUntilEndOfStartRecovery = chargeInfo.cooldownStartTime + chargeInfo.cooldownDuration - GetTime(),
-                    isOnGCD = false,
-                    modRate = chargeInfo.chargeModRate or 1,
-                }
+            if entry.isChargeSpell then
+                local charges = cachedChargeCount[entry.spellId]
+                if charges == nil then charges = entry.maxCharges or 1 end
+                if charges > 0 then
+                    showThis = false
+                end
             end
-            -- If charges > 0, spell is available → not on CD, skip it
-        else
-            -- Non-charge spell (or maxCharges == 1): check standard cooldown
-            -- Use isOnGCD ~= true (not == false) because isOnGCD can be nil for some spells
-            -- Also verify duration > 1.5 to exclude GCD-only returns
-            if cdInfo and cdInfo.isOnGCD ~= true and cdInfo.duration and cdInfo.duration > 1.5
-               and cdInfo.timeUntilEndOfStartRecovery and cdInfo.timeUntilEndOfStartRecovery > 0 then
-                isOnRealCd = true
-            end
-        end
 
-        if isOnRealCd and cdInfo.timeUntilEndOfStartRecovery then
-            if not bestCdInfo or cdInfo.timeUntilEndOfStartRecovery < bestCdInfo.timeUntilEndOfStartRecovery then
+            if showThis and not bestCdInfo then
                 bestCdInfo = cdInfo
                 bestEntry = entry
             end
@@ -642,15 +645,11 @@ CheckMovementCooldown = function()
     end
 
     if bestCdInfo and bestEntry then
-        -- Spell is on cooldown - show and schedule next poll
         ShowMovementDisplay(bestCdInfo, bestEntry)
-
-        -- Schedule next poll for smooth countdown updates
         CancelMovementCountdown()
         local pollMs = math.max(50, db.pollRate or 100)
         movementCountdownTimer = C_Timer.NewTimer(pollMs / 1000, CheckMovementCooldown)
     else
-        -- All spells are ready or just GCD - hide display
         HideMovementDisplay()
     end
 end
@@ -675,8 +674,6 @@ local function UpdateTimeSpiralCountdown()
         local fmtStr = tsTextFormat:gsub("\\n", "\n"):gsub("%%t", "%%s")
         timeSpiralText:SetFormattedText(fmtStr, string.format("%.1f", remaining))
         timeSpiralFrame:Show()
-
-        -- Schedule next update
         timeSpiralCountdownTimer = C_Timer.NewTimer(0.1, UpdateTimeSpiralCountdown)
     else
         timeSpiralActiveTime = nil
@@ -713,7 +710,6 @@ local function CheckGatewayUsable()
         return
     end
 
-    -- Check if player has the item
     local itemCount = C_Item.GetItemCount(GATEWAY_SHARD_ITEM_ID)
     if itemCount == 0 then
         if not db.gwUnlock then
@@ -723,17 +719,14 @@ local function CheckGatewayUsable()
         return
     end
 
-    -- Check combat-only setting
     if db.gwCombatOnly and not inCombat and not db.gwUnlock then
         gatewayFrame:Hide()
         lastGatewayUsable = false
         return
     end
 
-    -- Check if item is usable (gateway nearby)
     local isUsable = C_Item.IsUsableItem(GATEWAY_SHARD_ITEM_ID)
 
-    -- Sound/TTS on transition from not usable to usable
     if isUsable and not lastGatewayUsable then
         PlayGatewayAlert(db)
     end
@@ -756,10 +749,7 @@ local function StartGatewayPolling()
     local db = NaowhQOL.movementAlert
     if not db or not db.gwEnabled then return end
 
-    -- Check immediately
     CheckGatewayUsable()
-
-    -- Start polling ticker at 0.1s
     gatewayPollTicker = C_Timer.NewTicker(0.1, CheckGatewayUsable)
 end
 
@@ -776,30 +766,28 @@ loader:RegisterEvent("PLAYER_REGEN_DISABLED")
 loader:RegisterEvent("PLAYER_REGEN_ENABLED")
 loader:RegisterEvent("PLAYER_LOGOUT")
 
--- Track which optional events are registered
 local movementEventsRegistered = false
 local timeSpiralEventsRegistered = false
 
--- Register/unregister events based on feature enabled state
 UpdateEventRegistration = function()
     local db = NaowhQOL.movementAlert
     if not db then return end
 
-    -- Movement CD events (only when enabled)
     if db.enabled and not movementEventsRegistered then
         loader:RegisterEvent("SPELL_UPDATE_USABLE")
         loader:RegisterEvent("SPELL_UPDATE_COOLDOWN")
         loader:RegisterEvent("SPELL_UPDATE_CHARGES")
+        loader:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
         movementEventsRegistered = true
     elseif not db.enabled and movementEventsRegistered then
         loader:UnregisterEvent("SPELL_UPDATE_USABLE")
         loader:UnregisterEvent("SPELL_UPDATE_COOLDOWN")
         loader:UnregisterEvent("SPELL_UPDATE_CHARGES")
+        loader:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         movementEventsRegistered = false
         CancelMovementCountdown()
     end
 
-    -- Time Spiral events (only when enabled)
     if db.tsEnabled and not timeSpiralEventsRegistered then
         loader:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW")
         loader:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE")
@@ -816,7 +804,6 @@ UpdateEventRegistration = function()
         CancelTimeSpiralCountdown()
     end
 
-    -- Gateway Shard polling (only when enabled)
     if db.gwEnabled then
         StartGatewayPolling()
     else
@@ -893,7 +880,6 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
         gatewayFrame:UpdateDisplay()
         UpdateEventRegistration()
 
-        -- Re-evaluate on spec change
         ns.SpecUtil.RegisterCallback("MovementAlert", function()
             CacheMovementSpells()
             movementFrame:UpdateDisplay()
@@ -902,17 +888,13 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
             CheckMovementCooldown()
         end)
 
-        -- Initial cooldown check
         CheckMovementCooldown()
-        -- Start gateway polling if enabled
         StartGatewayPolling()
 
-        -- Delayed re-sync to ensure events are registered after all init completes
         C_Timer.After(0.2, function()
             UpdateEventRegistration()
         end)
 
-        -- Register for profile refresh
         ns.SettingsIO:RegisterRefresh("movementAlert", function()
             RebuildMobilitySpellLookup()
             CacheMovementSpells()
@@ -928,6 +910,7 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
         timeSpiralActiveTime = nil
         CancelMovementCountdown()
         CancelTimeSpiralCountdown()
+        CancelAllRechargeTimers()
         StopGatewayPolling()
         return
     end
@@ -942,16 +925,29 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
         RefreshCastFilters()
     elseif event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
+        for _, entry in ipairs(cachedMovementSpells) do
+            if entry.isChargeSpell then
+                local cur = cachedChargeCount[entry.spellId]
+                if cur and cur < (entry.maxCharges or 1) and not rechargeTimers[entry.spellId] then
+                    StartRechargeTimer(entry)
+                end
+            end
+        end
         CheckMovementCooldown()
         CheckGatewayUsable()
     elseif event == "PLAYER_REGEN_ENABLED" then
         inCombat = false
+        CancelAllRechargeTimers()
         CacheMovementSpells()
         CheckMovementCooldown()
         CheckGatewayUsable()
     elseif event == "SPELL_UPDATE_USABLE" or event == "SPELL_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_CHARGES" then
         if DEBUG_MODE then print("[MovementAlert] Event:", event) end
+        UpdateCachedCharges()
         CheckMovementCooldown()
+    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+        local _, _, spellId = ...
+        OnChargeSpellUsed(spellId)
     elseif event == "UNIT_SPELLCAST_SENT" then
         local _, _, _, spellId = ...
         OnSpellCast(spellId)
@@ -965,8 +961,6 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
         end
     end
 
-    -- Only refresh frames on initialization / config-related events to avoid
-    -- blinking during combat when high-frequency spell events fire.
     if event == "PLAYER_LOGIN"
         or event == "PLAYER_SPECIALIZATION_CHANGED"
         or event == "PLAYER_TALENT_UPDATE"
