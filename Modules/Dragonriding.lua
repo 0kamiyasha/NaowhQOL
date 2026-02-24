@@ -568,6 +568,9 @@ local function BuildUI()
         xKey = "posX",
         yKey = "posY",
         userPlaced = false,
+        onDragStop = function()
+            if ns.SettingsIO then ns.SettingsIO:MarkDirty() end
+        end,
     })
 
     speedBar = CreateFrame("StatusBar", nil, mainFrame)
@@ -609,6 +612,7 @@ local function BuildUI()
         end
         self:ClearAllPoints()
         self:SetPoint("RIGHT", mainFrame, "RIGHT", Get("speedTextOffsetX"), Get("speedTextOffsetY"))
+        if ns.SettingsIO then ns.SettingsIO:MarkDirty() end
     end)
 
     speedText = speedTextFrame:CreateFontString(nil, "OVERLAY")
