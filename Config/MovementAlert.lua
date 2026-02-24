@@ -146,7 +146,7 @@ function ns:InitMovementAlert()
         W:CreateColorPicker(appContent, {
             label = L["COMMON_LABEL_TEXT_COLOR"], db = db,
             rKey = "textColorR", gKey = "textColorG", bKey = "textColorB",
-            x = LA:Col(2), y = LA:Row(1) + 6,
+            x = LA:Col(2), y = LA:Row(1) + 12,
             onChange = refreshMovement
         })
 
@@ -247,23 +247,30 @@ function ns:InitMovementAlert()
 
         local LT = ns.Layout:New(2)
 
+        -- Row 1: Text Format + Color
         W:CreateTextInput(tsColContent, {
-            label = L["TIME_SPIRAL_TEXT"], db = db, key = "tsText",
-            default = "FREE MOVEMENT", x = LT:Col(1), y = LT:Row(1), width = 150,
+            label = L["TIME_SPIRAL_TEXT_FORMAT"], db = db, key = "tsTextFormat",
+            default = L["TIME_SPIRAL_TEXT_FORMAT_DEFAULT"] or "FREE MOVEMENT\\n%ts", x = LT:Col(1), y = LT:Row(1), width = 150,
             onChange = refreshTimeSpiral
         })
 
         W:CreateColorPicker(tsColContent, {
             label = L["TIME_SPIRAL_COLOR"], db = db,
             rKey = "tsColorR", gKey = "tsColorG", bKey = "tsColorB",
-            x = LT:Col(2), y = LT:Row(1) - 4,
+            x = LT:Col(2), y = LT:Row(1) + 6,
             onChange = refreshTimeSpiral
         })
 
+        -- Row 2: Format help text (short row)
+        local tsFormatHelp = tsColContent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        tsFormatHelp:SetPoint("TOPLEFT", LT:Col(1), LT:Row(1) - 32)
+        tsFormatHelp:SetText(L["TIME_SPIRAL_TEXT_FORMAT_HELP"])
+
+        -- Row 2: Play Sound + Sound Picker
         W:CreateCheckbox(tsColContent, {
             label = L["TIME_SPIRAL_SOUND_ON"],
             db = db, key = "tsSoundEnabled",
-            x = LT:Col(1), y = LT:Row(2) + 5,
+            x = LT:Col(1), y = LT:Row(3) + 5,
             template = "ChatConfigCheckButtonTemplate",
             onChange = function()
                 if db.tsSoundEnabled then db.tsTtsEnabled = false end
@@ -271,13 +278,14 @@ function ns:InitMovementAlert()
             end
         })
 
-        W:CreateSoundPicker(tsColContent, LT:Col(2), LT:Row(2) + 11, db.tsSoundID or 8959,
+        W:CreateSoundPicker(tsColContent, LT:Col(2), LT:Row(3) + 11, db.tsSoundID or 8959,
             function(sound) db.tsSoundID = sound end)
 
+        -- Row 3: Play TTS
         W:CreateCheckbox(tsColContent, {
             label = L["TIME_SPIRAL_TTS_ON"],
             db = db, key = "tsTtsEnabled",
-            x = LT:Col(1), y = LT:Row(3) + 5,
+            x = LT:Col(1), y = LT:Row(4) + 5,
             template = "ChatConfigCheckButtonTemplate",
             onChange = function()
                 if db.tsTtsEnabled then db.tsSoundEnabled = false end
@@ -285,20 +293,21 @@ function ns:InitMovementAlert()
             end
         })
 
+        -- Row 4: TTS Message + TTS Volume
         W:CreateTextInput(tsColContent, {
             label = L["TIME_SPIRAL_TTS_MESSAGE"], db = db, key = "tsTtsMessage",
-            default = "Free movement", x = LT:Col(1), y = LT:Row(4), width = 150,
+            default = "Free movement", x = LT:Col(1), y = LT:Row(5), width = 150,
         })
 
         W:CreateSlider(tsColContent, {
             label = L["TIME_SPIRAL_TTS_VOLUME"],
             min = 0, max = 100, step = 1,
-            x = LT:Col(2), y = LT:Row(4),
+            x = LT:Col(2), y = LT:Row(5) + 9,
             db = db, key = "tsTtsVolume",
             onChange = function(val) db.tsTtsVolume = val end
         })
 
-        tsColContent:SetHeight(LT:Height(5))
+        tsColContent:SetHeight(LT:Height(6))
         tsColWrap:RecalcHeight()
 
         -- ============================================================
@@ -361,7 +370,7 @@ function ns:InitMovementAlert()
         W:CreateColorPicker(gwColContent, {
             label = L["GATEWAY_SHARD_COLOR"], db = db,
             rKey = "gwColorR", gKey = "gwColorG", bKey = "gwColorB",
-            x = LG:Col(2), y = LG:Row(1) - 4,
+            x = LG:Col(2), y = LG:Row(1) + 6,
             onChange = refreshGateway
         })
 
@@ -392,7 +401,7 @@ function ns:InitMovementAlert()
         W:CreateSlider(gwColContent, {
             label = L["GATEWAY_SHARD_TTS_VOLUME"],
             min = 0, max = 100, step = 1,
-            x = LG:Col(2), y = LG:Row(4),
+            x = LG:Col(2), y = LG:Row(4) + 9,
             db = db, key = "gwTtsVolume",
             onChange = function(val) db.gwTtsVolume = val end
         })

@@ -94,27 +94,34 @@ function ns:InitCoTank()
         W:CreateColorPicker(healthContent, {
             label = L["COTANK_HEALTH_COLOR"] or "Health Color", db = db,
             rKey = "healthColorR", gKey = "healthColorG", bKey = "healthColorB",
-            x = G:Col(2), y = G:ColorY(1),
+            x = G:Col(2), y = G:Row(1) + 6,
             onChange = refreshDisplay
         })
 
-        local widthSlider = W:CreateAdvancedSlider(healthContent,
-            W.Colorize(L["COTANK_WIDTH"] or "Width", C.ORANGE), 50, 300, G:Row(2), 1, false,
-            function(val) db.width = val; refreshDisplay() end,
-            { db = db, key = "width", moduleName = "coTank" })
-        PlaceSlider(widthSlider, healthContent, G:Col(1), G:SliderY(2))
+        W:CreateSlider(healthContent, {
+            label = L["COTANK_WIDTH"] or "Width",
+            min = 50, max = 300, step = 1,
+            x = G:Col(1), y = G:Row(2),
+            db = db, key = "width",
+            onChange = function(val) db.width = val; refreshDisplay() end
+        })
 
-        local heightSlider = W:CreateAdvancedSlider(healthContent,
-            W.Colorize(L["COTANK_HEIGHT"] or "Height", C.ORANGE), 10, 60, G:Row(2), 1, false,
-            function(val) db.height = val; refreshDisplay() end,
-            { db = db, key = "height", moduleName = "coTank" })
-        PlaceSlider(heightSlider, healthContent, G:Col(2), G:SliderY(2))
+        W:CreateSlider(healthContent, {
+            label = L["COTANK_HEIGHT"] or "Height",
+            min = 10, max = 60, step = 1,
+            x = G:Col(2), y = G:Row(2),
+            db = db, key = "height",
+            onChange = function(val) db.height = val; refreshDisplay() end
+        })
 
-        local bgSlider = W:CreateAdvancedSlider(healthContent,
-            W.Colorize(L["COTANK_BG_OPACITY"] or "Background Opacity", C.ORANGE), 0, 100, G:Row(3), 5, true,
-            function(val) db.bgAlpha = val / 100; refreshDisplay() end,
-            { value = (db.bgAlpha or 0.6) * 100 })
-        PlaceSlider(bgSlider, healthContent, G:Col(1), G:SliderY(3))
+        W:CreateSlider(healthContent, {
+            label = L["COTANK_BG_OPACITY"] or "Background Opacity",
+            min = 0, max = 100, step = 5,
+            isPercent = true,
+            x = G:Col(1), y = G:Row(3),
+            value = (db.bgAlpha or 0.6) * 100,
+            onChange = function(val) db.bgAlpha = val / 100; refreshDisplay() end
+        })
 
         healthContent:SetHeight(G:Height(3))
         healthWrap:RecalcHeight()
@@ -131,49 +138,52 @@ function ns:InitCoTank()
 
         local NG = ns.Layout:New(2)
 
-        -- Row 1: Show Name, Name Format
-        W:CreateCheckbox(nameContent, {
-            label = L["COTANK_SHOW_NAME"] or "Show Name",
-            db = db, key = "showName",
-            x = NG:Col(1), y = NG:CheckboxY(1),
-            onChange = refreshDisplay
-        })
-
-        W:CreateDropdown(nameContent, {
-            label = L["COTANK_NAME_FORMAT"] or "Name Format",
-            db = db, key = "nameFormat",
-            x = NG:Col(2), y = NG:Row(1),
-            options = nameFormatOptions,
-            onChange = refreshDisplay
-        })
-
-        -- Row 2: Name Length, Font Size
-        local nameLengthSlider = W:CreateAdvancedSlider(nameContent,
-            W.Colorize(L["COTANK_NAME_LENGTH"] or "Name Length", C.ORANGE), 3, 12, NG:Row(2), 1, false,
-            function(val) db.nameLength = val; refreshDisplay() end,
-            { db = db, key = "nameLength", moduleName = "coTank" })
-        PlaceSlider(nameLengthSlider, nameContent, NG:Col(1), NG:SliderY(2))
-
-        local nameFontSlider = W:CreateAdvancedSlider(nameContent,
-            W.Colorize(L["COTANK_NAME_FONT_SIZE"] or "Font Size", C.ORANGE), 8, 24, NG:Row(2), 1, false,
-            function(val) db.nameFontSize = val; refreshDisplay() end,
-            { db = db, key = "nameFontSize", moduleName = "coTank" })
-        PlaceSlider(nameFontSlider, nameContent, NG:Col(2), NG:SliderY(2))
-
-        -- Row 3: Use Class Color, Name Color
+        -- Row 1: Use Class Color + Name Color (matches Health Bar layout)
         W:CreateCheckbox(nameContent, {
             label = L["COTANK_NAME_USE_CLASS_COLOR"] or "Use Class Color",
             db = db, key = "nameColorUseClassColor",
-            x = NG:Col(1), y = NG:CheckboxY(3),
-            template = "ChatConfigCheckButtonTemplate",
+            x = NG:Col(1), y = NG:CheckboxY(1),
             onChange = refreshDisplay
         })
 
         W:CreateColorPicker(nameContent, {
             label = L["COTANK_NAME_COLOR"] or "Name Color", db = db,
             rKey = "nameColorR", gKey = "nameColorG", bKey = "nameColorB",
-            x = NG:Col(2), y = NG:ColorY(3),
+            x = NG:Col(2), y = NG:Row(1) + 6,
             onChange = refreshDisplay
+        })
+
+        -- Row 2: Show Name + Name Format
+        W:CreateCheckbox(nameContent, {
+            label = L["COTANK_SHOW_NAME"] or "Show Name",
+            db = db, key = "showName",
+            x = NG:Col(1), y = NG:CheckboxY(2),
+            onChange = refreshDisplay
+        })
+
+        W:CreateDropdown(nameContent, {
+            label = L["COTANK_NAME_FORMAT"] or "Name Format",
+            db = db, key = "nameFormat",
+            x = NG:Col(2), y = NG:Row(2) + 12,
+            options = nameFormatOptions,
+            onChange = refreshDisplay
+        })
+
+        -- Row 3: Name Length + Font Size
+        W:CreateSlider(nameContent, {
+            label = L["COTANK_NAME_LENGTH"] or "Name Length",
+            min = 3, max = 12, step = 1,
+            x = NG:Col(1), y = NG:Row(3),
+            db = db, key = "nameLength",
+            onChange = function(val) db.nameLength = val; refreshDisplay() end
+        })
+
+        W:CreateSlider(nameContent, {
+            label = L["COTANK_NAME_FONT_SIZE"] or "Font Size",
+            min = 8, max = 24, step = 1,
+            x = NG:Col(2), y = NG:Row(3),
+            db = db, key = "nameFontSize",
+            onChange = function(val) db.nameFontSize = val; refreshDisplay() end
         })
 
         nameContent:SetHeight(NG:Height(3))

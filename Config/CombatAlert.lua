@@ -5,13 +5,6 @@ local cache = {}
 local W = ns.Widgets
 local C = ns.COLORS
 
-local function PlaceSlider(slider, parent, x, y)
-    local frame = slider:GetParent()
-    frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    return slider
-end
-
 function ns:InitCombatAlerts()
     local p = ns.MainFrame.Content
     local db = NaowhQOL.combatAlert
@@ -91,20 +84,21 @@ function ns:InitCombatAlerts()
 
         W:CreateTextInput(enterContent, {
             label = L["COMBATALERT_DISPLAY_TEXT"], db = db, key = "enterText",
-            default = "++ Combat", x = GE:Col(1), y = GE:Row(1), width = 200,
+            default = "++ Combat", x = GE:Col(1), y = GE:Row(1), width = 150,
             onChange = refresh
         })
 
         W:CreateColorPicker(enterContent, {
             label = L["COMMON_LABEL_TEXT_COLOR"], db = db,
             rKey = "enterR", gKey = "enterG", bKey = "enterB",
-            x = GE:Col(1), y = GE:Row(2),
+            x = GE:Col(2), y = GE:Row(1) + 6,
             onChange = refresh
         })
 
+        -- Row 2: Audio Mode
         W:CreateDropdown(enterContent, {
             label = L["COMBATALERT_AUDIO_MODE"],
-            x = GE:Col(2), y = GE:Row(2),
+            x = GE:Col(1), y = GE:Row(2),
             db = db, key = "enterAudioMode",
             options = {
                 { text = L["COMBATALERT_AUDIO_NONE"], value = "none" },
@@ -114,10 +108,12 @@ function ns:InitCombatAlerts()
             onChange = refresh
         })
 
+        -- Row 3: Sound Picker
         W:CreateSoundPicker(enterContent, GE:Col(1), GE:Row(3), db.enterSound, function(sound)
             db.enterSound = sound
         end)
 
+        -- Row 4: TTS Message
         local enterTtsLbl = enterContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         enterTtsLbl:SetPoint("TOPLEFT", GE:Col(1), GE:Row(4))
         enterTtsLbl:SetText(L["COMMON_TTS_MESSAGE"])
@@ -142,6 +138,7 @@ function ns:InitCombatAlerts()
             db.enterTtsMessage = val
         end)
 
+        -- Row 5: TTS Voice
         local enterTtsVoiceLbl = enterContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         enterTtsVoiceLbl:SetPoint("TOPLEFT", GE:Col(1), GE:Row(5))
         enterTtsVoiceLbl:SetText(L["COMMON_TTS_VOICE"])
@@ -150,17 +147,23 @@ function ns:InitCombatAlerts()
             db.enterTtsVoiceID = voiceID
         end)
 
-        local enterTtsVolSlider = W:CreateAdvancedSlider(enterContent,
-            W.Colorize(L["COMMON_TTS_VOLUME"], C.ORANGE), 0, 100, -249, 5, true,
-            function(val) db.enterTtsVolume = val end,
-            { db = db, key = "enterTtsVolume", moduleName = "combatAlert" })
-        PlaceSlider(enterTtsVolSlider, enterContent, GE:Col(1), GE:Row(6))
+        -- Row 6: TTS Volume + TTS Speed
+        W:CreateSlider(enterContent, {
+            label = L["COMMON_TTS_VOLUME"],
+            min = 0, max = 100, step = 5,
+            isPercent = true,
+            x = GE:Col(1), y = GE:Row(6),
+            db = db, key = "enterTtsVolume",
+            onChange = function(val) db.enterTtsVolume = val end
+        })
 
-        local enterTtsRateSlider = W:CreateAdvancedSlider(enterContent,
-            W.Colorize(L["COMMON_TTS_SPEED"], C.ORANGE), -10, 10, -249, 1, false,
-            function(val) db.enterTtsRate = val end,
-            { db = db, key = "enterTtsRate", moduleName = "combatAlert" })
-        PlaceSlider(enterTtsRateSlider, enterContent, GE:Col(2), GE:Row(6))
+        W:CreateSlider(enterContent, {
+            label = L["COMMON_TTS_SPEED"],
+            min = -10, max = 10, step = 1,
+            x = GE:Col(2), y = GE:Row(6),
+            db = db, key = "enterTtsRate",
+            onChange = function(val) db.enterTtsRate = val end
+        })
 
         enterContent:SetHeight(GE:Height(6))
         enterWrap:RecalcHeight()
@@ -176,20 +179,21 @@ function ns:InitCombatAlerts()
 
         W:CreateTextInput(leaveContent, {
             label = L["COMBATALERT_DISPLAY_TEXT"], db = db, key = "leaveText",
-            default = "-- Combat", x = GL:Col(1), y = GL:Row(1), width = 200,
+            default = "-- Combat", x = GL:Col(1), y = GL:Row(1), width = 150,
             onChange = refresh
         })
 
         W:CreateColorPicker(leaveContent, {
             label = L["COMMON_LABEL_TEXT_COLOR"], db = db,
             rKey = "leaveR", gKey = "leaveG", bKey = "leaveB",
-            x = GL:Col(1), y = GL:Row(2),
+            x = GL:Col(2), y = GL:Row(1) + 6,
             onChange = refresh
         })
 
+        -- Row 2: Audio Mode
         W:CreateDropdown(leaveContent, {
             label = L["COMBATALERT_AUDIO_MODE"],
-            x = GL:Col(2), y = GL:Row(2),
+            x = GL:Col(1), y = GL:Row(2),
             db = db, key = "leaveAudioMode",
             options = {
                 { text = L["COMBATALERT_AUDIO_NONE"], value = "none" },
@@ -199,10 +203,12 @@ function ns:InitCombatAlerts()
             onChange = refresh
         })
 
+        -- Row 3: Sound Picker
         W:CreateSoundPicker(leaveContent, GL:Col(1), GL:Row(3), db.leaveSound, function(sound)
             db.leaveSound = sound
         end)
 
+        -- Row 4: TTS Message
         local leaveTtsLbl = leaveContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         leaveTtsLbl:SetPoint("TOPLEFT", GL:Col(1), GL:Row(4))
         leaveTtsLbl:SetText(L["COMMON_TTS_MESSAGE"])
@@ -227,6 +233,7 @@ function ns:InitCombatAlerts()
             db.leaveTtsMessage = val
         end)
 
+        -- Row 5: TTS Voice
         local leaveTtsVoiceLbl = leaveContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         leaveTtsVoiceLbl:SetPoint("TOPLEFT", GL:Col(1), GL:Row(5))
         leaveTtsVoiceLbl:SetText(L["COMMON_TTS_VOICE"])
@@ -235,17 +242,23 @@ function ns:InitCombatAlerts()
             db.leaveTtsVoiceID = voiceID
         end)
 
-        local leaveTtsVolSlider = W:CreateAdvancedSlider(leaveContent,
-            W.Colorize(L["COMMON_TTS_VOLUME"], C.ORANGE), 0, 100, -249, 5, true,
-            function(val) db.leaveTtsVolume = val end,
-            { db = db, key = "leaveTtsVolume", moduleName = "combatAlert" })
-        PlaceSlider(leaveTtsVolSlider, leaveContent, GL:Col(1), GL:Row(6))
+        -- Row 6: TTS Volume + TTS Speed
+        W:CreateSlider(leaveContent, {
+            label = L["COMMON_TTS_VOLUME"],
+            min = 0, max = 100, step = 5,
+            isPercent = true,
+            x = GL:Col(1), y = GL:Row(6),
+            db = db, key = "leaveTtsVolume",
+            onChange = function(val) db.leaveTtsVolume = val end
+        })
 
-        local leaveTtsRateSlider = W:CreateAdvancedSlider(leaveContent,
-            W.Colorize(L["COMMON_TTS_SPEED"], C.ORANGE), -10, 10, -249, 1, false,
-            function(val) db.leaveTtsRate = val end,
-            { db = db, key = "leaveTtsRate", moduleName = "combatAlert" })
-        PlaceSlider(leaveTtsRateSlider, leaveContent, GL:Col(2), GL:Row(6))
+        W:CreateSlider(leaveContent, {
+            label = L["COMMON_TTS_SPEED"],
+            min = -10, max = 10, step = 1,
+            x = GL:Col(2), y = GL:Row(6),
+            db = db, key = "leaveTtsRate",
+            onChange = function(val) db.leaveTtsRate = val end
+        })
 
         leaveContent:SetHeight(GL:Height(6))
         leaveWrap:RecalcHeight()

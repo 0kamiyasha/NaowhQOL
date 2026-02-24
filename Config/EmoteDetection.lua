@@ -66,24 +66,32 @@ function ns:InitEmoteDetection()
             onCollapse = function() if RelayoutAll then RelayoutAll() end end,
         })
 
-        W:CreateFontPicker(appContent, 10, -5, db.font, function(path)
+        local GA = ns.Layout:New(2)
+
+        -- Row 1: Font picker
+        W:CreateFontPicker(appContent, GA:Col(1), GA:Row(1) + 12, db.font, function(path)
             db.font = path
             refreshDisplay()
         end)
 
-        local sizeSlider = W:CreateAdvancedSlider(appContent,
-            W.Colorize(L["COMMON_LABEL_TEXT_SIZE"], C.ORANGE), 8, 36, -45, 1, false,
-            function(val) db.fontSize = val; refreshDisplay() end,
-            { db = db, key = "fontSize", moduleName = "emoteDetection" })
+        -- Row 2: Text Size
+        W:CreateSlider(appContent, {
+            label = L["COMMON_LABEL_TEXT_SIZE"],
+            min = 8, max = 36, step = 1,
+            x = GA:Col(1), y = GA:Row(2),
+            db = db, key = "fontSize",
+            onChange = function(val) db.fontSize = val; refreshDisplay() end
+        })
 
+        -- Row 3: Text Color
         W:CreateColorPicker(appContent, {
             label = L["COMMON_LABEL_TEXT_COLOR"], db = db,
             rKey = "textR", gKey = "textG", bKey = "textB",
-            x = 10, y = -105,
+            x = GA:Col(1), y = GA:Row(3) + 6,
             onChange = refreshDisplay
         })
 
-        appContent:SetHeight(150)
+        appContent:SetHeight(GA:Height(3))
         appWrap:RecalcHeight()
 
         -- EMOTE FILTER
@@ -169,14 +177,17 @@ function ns:InitEmoteDetection()
             onChange = function() if ns.RebuildAutoEmoteLookup then ns.RebuildAutoEmoteLookup() end end,
         })
 
-        local cdSlider = W:CreateAdvancedSlider(autoContent,
-            W.Colorize(L["EMOTE_COOLDOWN"], C.ORANGE), 0, 10, -65, 0.5, false,
-            function(val) db.autoEmoteCooldown = val end,
-            { db = db, key = "autoEmoteCooldown", moduleName = "emoteDetection" })
+        W:CreateSlider(autoContent, {
+            label = L["EMOTE_COOLDOWN"],
+            min = 0, max = 10, step = 0.5,
+            x = 10, y = -60,
+            db = db, key = "autoEmoteCooldown",
+            onChange = function(val) db.autoEmoteCooldown = val end
+        })
 
         -- List container for auto emote entries
         local autoListContainer = CreateFrame("Frame", nil, autoContent)
-        autoListContainer:SetPoint("TOPLEFT", 10, -110)
+        autoListContainer:SetPoint("TOPLEFT", 10, -115)
         autoListContainer:SetSize(420, 1)
 
         -- Modal editor

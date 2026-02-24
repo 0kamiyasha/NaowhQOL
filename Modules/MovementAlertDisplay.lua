@@ -600,8 +600,9 @@ local function UpdateTimeSpiralCountdown()
 
     local remaining = 10 - (GetTime() - timeSpiralActiveTime)
     if remaining > 0 then
-        local tsText = db.tsText or L["TIME_SPIRAL_TEXT_DEFAULT"] or "FREE MOVEMENT"
-        timeSpiralText:SetText(string.format("%s\n%.1f", tsText, remaining))
+        local tsTextFormat = db.tsTextFormat or db.tsText or L["TIME_SPIRAL_TEXT_FORMAT_DEFAULT"] or "FREE MOVEMENT\n%ts"
+        local fmtStr = tsTextFormat:gsub("\\n", "\n"):gsub("%%t", "%%s")
+        timeSpiralText:SetFormattedText(fmtStr, string.format("%.1f", remaining))
         timeSpiralFrame:Show()
 
         -- Schedule next update

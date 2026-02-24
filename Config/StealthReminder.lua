@@ -307,9 +307,13 @@ function ns:InitStealthReminder()
         W:CreateSoundPicker(stColContent, 10, -110, db.stanceSound or { id = 8959 },
             function(sound) db.stanceSound = sound end)
 
-        local intervalSlider = W:CreateAdvancedSlider(stColContent, L["STEALTH_REPEAT"], 0, 15, -155, 1, false,
-            function(val) db.stanceSoundInterval = val end,
-            { db = db, key = "stanceSoundInterval", moduleName = "stealthReminder" })
+        local intervalSlider = W:CreateSlider(stColContent, {
+            label = L["STEALTH_REPEAT"],
+            min = 0, max = 15, step = 1,
+            x = 10, y = -155,
+            db = db, key = "stanceSoundInterval",
+            onChange = function(val) db.stanceSoundInterval = val end
+        })
 
         stColContent:SetHeight(200)
         stColWrap:RecalcHeight()

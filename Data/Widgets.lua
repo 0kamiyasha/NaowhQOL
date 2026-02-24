@@ -674,6 +674,12 @@ function ns.Widgets:CreateCheckbox(parent, opts)
         desc:SetWidth(opts.descWidth or 300)
         desc:SetJustifyH("LEFT")
         cb.desc = desc
+
+        hooksecurefunc(cb, "SetShown", function(self, shown)
+            desc:SetShown(shown)
+        end)
+        hooksecurefunc(cb, "Show", function() desc:Show() end)
+        hooksecurefunc(cb, "Hide", function() desc:Hide() end)
     end
 
     cb:HookScript("OnDisable", function(self)
