@@ -172,6 +172,7 @@ local stanceSoundTicker = nil
 local lastStanceSoundTime = 0
 local STANCE_SOUND_COOLDOWN = 0.9
 local stanceSoundFired = false
+local DRUID_TRAVEL_FORM = 3
 
 local function StopStanceSound()
     if stanceSoundTicker then
@@ -214,6 +215,11 @@ local function IsInExpectedForm(expected)
         return false
     end
     return currentFormIndex == expected
+end
+
+local function IsDruidTravelForm()
+    if ns.SpecUtil.GetClassName() ~= "DRUID" then return false end
+    return currentFormIndex == DRUID_TRAVEL_FORM
 end
 
 function stanceFrame:UpdateDisplay()
@@ -261,7 +267,7 @@ function stanceFrame:UpdateDisplay()
         return
     end
 
-    if IsMounted() and not db.stanceUnlock then
+    if (IsMounted() or IsDruidTravelForm()) and not db.stanceUnlock then
         StopStanceSound()
         stanceFrame:Hide()
         return
