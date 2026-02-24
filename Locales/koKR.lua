@@ -220,6 +220,7 @@ ns:RegisterLocale("koKR", {
     DRAGON_SPEED_FONT = "속도 글꼴",
     DRAGON_SHOW_SPEED = "속도 텍스트 표시",
     DRAGON_SHOW_SPEED_DESC = "속도 바에 숫자 속도 표시",
+    DRAGON_SHOW_THRILL_TICK = "스릴 표시 마커",
     DRAGON_SWAP_BARS = "속도 / 충전 교체",
     DRAGON_SWAP_BARS_DESC = "충전 바를 속도 바 위에 배치",
     DRAGON_HIDE_GROUNDED = "착지 + 완충 시 숨기기",
@@ -241,6 +242,8 @@ ns:RegisterLocale("koKR", {
     DRAGON_ICON_BORDER_COLOR = "아이콘 테두리 색상",
     DRAGON_ICON_BORDER_OPACITY = "아이콘 테두리 투명도",
     DRAGON_ICON_BORDER_SIZE = "아이콘 테두리 크기",
+    DRAGON_SPEED_TEXT_OFFSET_X = "속도 텍스트 X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "속도 텍스트 Y",
 
     ---------------------------------------------------------------------------
     -- EMOTE DETECTION

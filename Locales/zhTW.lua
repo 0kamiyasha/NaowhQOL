@@ -220,6 +220,7 @@ ns:RegisterLocale("zhTW", {
     DRAGON_SPEED_FONT = "速度字型",
     DRAGON_SHOW_SPEED = "顯示速度文字",
     DRAGON_SHOW_SPEED_DESC = "在速度條上顯示數字速度",
+    DRAGON_SHOW_THRILL_TICK = "顯示激動標記",
     DRAGON_SWAP_BARS = "交換速度 / 充能",
     DRAGON_SWAP_BARS_DESC = "將充能條置於速度條上方",
     DRAGON_HIDE_GROUNDED = "著地且充能滿時隱藏",
@@ -241,6 +242,8 @@ ns:RegisterLocale("zhTW", {
     DRAGON_ICON_BORDER_COLOR = "圖示邊框顏色",
     DRAGON_ICON_BORDER_OPACITY = "圖示邊框透明度",
     DRAGON_ICON_BORDER_SIZE = "圖示邊框大小",
+    DRAGON_SPEED_TEXT_OFFSET_X = "速度文字 X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "速度文字 Y",
 
     ---------------------------------------------------------------------------
     -- EMOTE DETECTION

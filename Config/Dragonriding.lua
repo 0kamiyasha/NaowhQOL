@@ -245,7 +245,19 @@ function ns:InitDragonriding()
             { db = db, key = "speedFontSize", moduleName = "dragonriding" })
         PlaceSlider(fontSizeSlider, appContent, GAP:Col(2), GAP:Row(7))
 
-        appContent:SetHeight(GAP:Height(7))
+        local speedTextOffsetXSlider = W:CreateAdvancedSlider(appContent,
+            W.Colorize(L["DRAGON_SPEED_TEXT_OFFSET_X"], C.ORANGE), -400, 400, -385, 1, false,
+            function(val) db.speedTextOffsetX = val; drRefresh() end,
+            { db = db, key = "speedTextOffsetX", moduleName = "dragonriding" })
+        PlaceSlider(speedTextOffsetXSlider, appContent, GAP:Col(1), GAP:Row(8))
+
+        local speedTextOffsetYSlider = W:CreateAdvancedSlider(appContent,
+            W.Colorize(L["DRAGON_SPEED_TEXT_OFFSET_Y"], C.ORANGE), -400, 400, -385, 1, false,
+            function(val) db.speedTextOffsetY = val; drRefresh() end,
+            { db = db, key = "speedTextOffsetY", moduleName = "dragonriding" })
+        PlaceSlider(speedTextOffsetYSlider, appContent, GAP:Col(2), GAP:Row(8))
+
+        appContent:SetHeight(GAP:Height(8))
         appWrap:RecalcHeight()
 
         -- BEHAVIOR section
@@ -265,9 +277,17 @@ function ns:InitDragonriding()
         })
 
         W:CreateCheckbox(behContent, {
+            label = L["DRAGON_SHOW_THRILL_TICK"],
+            db = db, key = "showThrillTick",
+            x = 10, y = -30,
+            template = "ChatConfigCheckButtonTemplate",
+            onChange = drRefresh
+        })
+
+        W:CreateCheckbox(behContent, {
             label = L["DRAGON_SWAP_BARS"],
             db = db, key = "swapPosition",
-            x = 10, y = -30,
+            x = 10, y = -55,
             template = "ChatConfigCheckButtonTemplate",
             description = L["DRAGON_SWAP_BARS_DESC"],
             onChange = drRefresh
@@ -276,7 +296,7 @@ function ns:InitDragonriding()
         W:CreateCheckbox(behContent, {
             label = L["DRAGON_HIDE_GROUNDED"],
             db = db, key = "hideWhenGroundedFull",
-            x = 10, y = -55,
+            x = 10, y = -80,
             template = "ChatConfigCheckButtonTemplate",
             description = L["DRAGON_HIDE_GROUNDED_DESC"],
             onChange = drRefresh
@@ -285,7 +305,7 @@ function ns:InitDragonriding()
         W:CreateCheckbox(behContent, {
             label = L["DRAGON_HIDE_COOLDOWN"],
             db = db, key = "hideCdmWhileMounted",
-            x = 10, y = -80,
+            x = 10, y = -105,
             template = "ChatConfigCheckButtonTemplate",
             description = L["DRAGON_HIDE_COOLDOWN_DESC"],
             onChange = drRefresh
@@ -294,13 +314,13 @@ function ns:InitDragonriding()
         W:CreateCheckbox(behContent, {
             label = L["DRAGON_HIDE_BCM"],
             db = db, key = "hideBcmWhileMounted",
-            x = 10, y = -105,
+            x = 10, y = -130,
             template = "ChatConfigCheckButtonTemplate",
             description = L["DRAGON_HIDE_BCM_DESC"],
             onChange = drRefresh
         })
 
-        behContent:SetHeight(135)
+        behContent:SetHeight(160)
         behWrap:RecalcHeight()
 
         -- FEATURES section

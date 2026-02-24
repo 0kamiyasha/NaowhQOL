@@ -220,6 +220,7 @@ ns:RegisterLocale("enUS", {
     DRAGON_SPEED_FONT = "Speed Font",
     DRAGON_SHOW_SPEED = "Show Speed Text",
     DRAGON_SHOW_SPEED_DESC = "Display numeric speed on the speed bar",
+    DRAGON_SHOW_THRILL_TICK = "Show Thrill Marker",
     DRAGON_SWAP_BARS = "Swap Speed / Charges",
     DRAGON_SWAP_BARS_DESC = "Put charge bars above the speed bar",
     DRAGON_HIDE_GROUNDED = "Hide When Grounded + Full",
@@ -243,6 +244,8 @@ ns:RegisterLocale("enUS", {
     DRAGON_ICON_BORDER_COLOR = "Icon Border Color",
     DRAGON_ICON_BORDER_OPACITY = "Icon Border Opacity",
     DRAGON_ICON_BORDER_SIZE = "Icon Border Size",
+    DRAGON_SPEED_TEXT_OFFSET_X = "Speed Text X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "Speed Text Y",
 
     ---------------------------------------------------------------------------
     -- EMOTE DETECTION

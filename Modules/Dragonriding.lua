@@ -18,6 +18,8 @@ local GROUND_SKIM_DURATION = 8.28
 local THROTTLE = 0.0333
 local NUM_CHARGES = 6
 local BAR_TEXTURE = [[Interface\Buttons\WHITE8x8]]
+-- Thrill activation speed threshold (730% display = ~51 raw = 0.60 on bar)
+local THRILL_SPEED_THRESHOLD = 0.60
 
 local COLOR_PRESETS = {
     Classic = {
@@ -42,7 +44,8 @@ local DEFAULTS = {
     thrillColorR = 1.00, thrillColorG = 0.66, thrillColorB = 0.00,
     chargeColorR = 0.01, chargeColorG = 0.56, chargeColorB = 0.91,
     speedFont = "Naowh",
-    speedFontSize = 12, surgeIconSize = 0, surgeAnchor = "RIGHT",
+    speedFontSize = 12, speedTextOffsetX = 0, speedTextOffsetY = 0,
+    surgeIconSize = 0, surgeAnchor = "RIGHT",
     surgeOffsetX = 6, surgeOffsetY = 0, anchorFrame = "UIParent", anchorTo = "BOTTOM",
     matchAnchorWidth = false,
     bgColorR = 0.12, bgColorG = 0.12, bgColorB = 0.12, bgAlpha = 0.8,
@@ -50,6 +53,7 @@ local DEFAULTS = {
     iconBorderColorR = 0, iconBorderColorG = 0, iconBorderColorB = 0, iconBorderAlpha = 1, iconBorderSize = 1,
     hideCdmWhileMounted = false,
     hideBcmWhileMounted = false,
+    showThrillTick = false,
 }
 
 -- Get config value with default fallback
@@ -66,7 +70,7 @@ local uiBuilt = false
 local stashedPosition = nil
 
 local mainFrame
-local speedBar, speedText
+local speedBar, speedText, thrillTick
 local chargeBars = {}
 local chargeDividers = {}
 local secondWindBars = {}
@@ -256,6 +260,16 @@ local function UpdateLayout()
 
     speedText:SetShown(Get("showSpeedText"))
     speedText:SetFont(ns.Media.ResolveFont(Get("speedFont")), Get("speedFontSize"), "OUTLINE")
+    speedText:ClearAllPoints()
+    speedText:SetPoint("RIGHT", mainFrame, "RIGHT", Get("speedTextOffsetX"), Get("speedTextOffsetY"))
+
+    -- Position thrill tick marker
+    if thrillTick then
+        thrillTick:SetShown(Get("showThrillTick"))
+        thrillTick:ClearAllPoints()
+        thrillTick:SetSize(1, speedHeight)
+        thrillTick:SetPoint("LEFT", speedBar, "LEFT", totalWidth * THRILL_SPEED_THRESHOLD, 0)
+    end
 
     for i = 1, NUM_CHARGES do
         local xOff = borderSize + (i - 1) * (barWidth + gap)
@@ -545,6 +559,10 @@ local function BuildUI()
     local sR, sG, sB = W.GetEffectiveColor(db, "speedColorR", "speedColorG", "speedColorB", "speedColorUseClassColor")
     speedBar:SetStatusBarColor(sR, sG, sB)
 
+    -- Thrill activation threshold tick mark (uses speed color - blue)
+    thrillTick = speedBar:CreateTexture(nil, "OVERLAY")
+    thrillTick:SetColorTexture(0.01, 0.56, 0.91, 1)
+
     local speedTextFrame = CreateFrame("Frame", nil, mainFrame)
     speedTextFrame:SetAllPoints()
     speedTextFrame:SetFrameLevel(mainFrame:GetFrameLevel() + 10)
@@ -553,7 +571,7 @@ local function BuildUI()
     speedText:SetFont(ns.Media.ResolveFont(Get("speedFont")), Get("speedFontSize"), "OUTLINE")
     speedText:SetJustifyH("RIGHT")
     speedText:SetJustifyV("MIDDLE")
-    speedText:SetPoint("RIGHT", mainFrame, "RIGHT", -2, 0)
+    speedText:SetPoint("RIGHT", mainFrame, "RIGHT", Get("speedTextOffsetX"), Get("speedTextOffsetY"))
     speedText:SetText("")
 
     for i = 1, NUM_CHARGES do

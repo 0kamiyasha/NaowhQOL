@@ -220,6 +220,7 @@ ns:RegisterLocale("ruRU", {
     DRAGON_SPEED_FONT = "Шрифт скорости",
     DRAGON_SHOW_SPEED = "Показывать значение скорости",
     DRAGON_SHOW_SPEED_DESC = "Отображать числовое значение на полосе скорости",
+    DRAGON_SHOW_THRILL_TICK = "Показывать метку азарта",
     DRAGON_SWAP_BARS = "Поменять местами скорость и заряды",
     DRAGON_SWAP_BARS_DESC = "Разместить полосы зарядов над полосой скорости",
     DRAGON_HIDE_GROUNDED = "Скрывать на земле при полной энергии",
@@ -241,7 +242,9 @@ ns:RegisterLocale("ruRU", {
     DRAGON_ICON_BORDER_COLOR = "Цвет рамки иконки",
     DRAGON_ICON_BORDER_OPACITY = "Прозрачность рамки иконки",
     DRAGON_ICON_BORDER_SIZE = "Размер рамки иконки",
-	
+    DRAGON_SPEED_TEXT_OFFSET_X = "Смещение текста скорости X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "Смещение текста скорости Y",
+
 	---------------------------------------------------------------------------
     -- EMOTE DETECTION
     ---------------------------------------------------------------------------

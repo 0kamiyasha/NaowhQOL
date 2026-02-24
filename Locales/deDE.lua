@@ -220,6 +220,7 @@ ns:RegisterLocale("deDE", {
     DRAGON_SPEED_FONT = "Geschwindigkeitsschrift",
     DRAGON_SHOW_SPEED = "Geschwindigkeitstext anzeigen",
     DRAGON_SHOW_SPEED_DESC = "Numerische Geschwindigkeit auf der Geschwindigkeitsleiste anzeigen",
+    DRAGON_SHOW_THRILL_TICK = "Nervenkitzel-Markierung anzeigen",
     DRAGON_SWAP_BARS = "Geschwindigkeit / Ladungen tauschen",
     DRAGON_SWAP_BARS_DESC = "Ladungsleisten über der Geschwindigkeitsleiste platzieren",
     DRAGON_HIDE_GROUNDED = "Beim Landen + Voll ausblenden",
@@ -241,6 +242,8 @@ ns:RegisterLocale("deDE", {
     DRAGON_ICON_BORDER_COLOR = "Symbolrandfarbe",
     DRAGON_ICON_BORDER_OPACITY = "Symbolrandtransparenz",
     DRAGON_ICON_BORDER_SIZE = "Symbolrandgröße",
+    DRAGON_SPEED_TEXT_OFFSET_X = "Geschwindigkeitstext X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "Geschwindigkeitstext Y",
 
     ---------------------------------------------------------------------------
     -- EMOTE DETECTION

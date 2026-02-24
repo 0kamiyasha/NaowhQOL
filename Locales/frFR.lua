@@ -220,6 +220,7 @@ ns:RegisterLocale("frFR", {
     DRAGON_SPEED_FONT = "Police de vitesse",
     DRAGON_SHOW_SPEED = "Afficher le texte de vitesse",
     DRAGON_SHOW_SPEED_DESC = "Afficher la vitesse numérique sur la barre de vitesse",
+    DRAGON_SHOW_THRILL_TICK = "Afficher le marqueur de frisson",
     DRAGON_SWAP_BARS = "Inverser vitesse / charges",
     DRAGON_SWAP_BARS_DESC = "Placer les barres de charge au-dessus de la barre de vitesse",
     DRAGON_HIDE_GROUNDED = "Masquer au sol + plein",
@@ -241,6 +242,8 @@ ns:RegisterLocale("frFR", {
     DRAGON_ICON_BORDER_COLOR = "Couleur de bordure d'icône",
     DRAGON_ICON_BORDER_OPACITY = "Opacité de bordure d'icône",
     DRAGON_ICON_BORDER_SIZE = "Taille de bordure d'icône",
+    DRAGON_SPEED_TEXT_OFFSET_X = "Texte de vitesse X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "Texte de vitesse Y",
 
     ---------------------------------------------------------------------------
     -- EMOTE DETECTION

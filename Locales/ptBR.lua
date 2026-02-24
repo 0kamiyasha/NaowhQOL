@@ -220,6 +220,7 @@ ns:RegisterLocale("ptBR", {
     DRAGON_SPEED_FONT = "Fonte da velocidade",
     DRAGON_SHOW_SPEED = "Mostrar texto de velocidade",
     DRAGON_SHOW_SPEED_DESC = "Exibe a velocidade numérica na barra de velocidade",
+    DRAGON_SHOW_THRILL_TICK = "Mostrar marcador de empolgação",
     DRAGON_SWAP_BARS = "Trocar velocidade / carga",
     DRAGON_SWAP_BARS_DESC = "Coloca a barra de carga acima da barra de velocidade",
     DRAGON_HIDE_GROUNDED = "Ocultar quando no chão e com carga máxima",
@@ -241,6 +242,8 @@ ns:RegisterLocale("ptBR", {
     DRAGON_ICON_BORDER_COLOR = "Cor da borda do ícone",
     DRAGON_ICON_BORDER_OPACITY = "Transparência da borda do ícone",
     DRAGON_ICON_BORDER_SIZE = "Tamanho da borda do ícone",
+    DRAGON_SPEED_TEXT_OFFSET_X = "Texto de Velocidade X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "Texto de Velocidade Y",
 
     ---------------------------------------------------------------------------
     -- EMOTE DETECTION
