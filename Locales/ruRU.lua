@@ -227,6 +227,8 @@ ns:RegisterLocale("ruRU", {
     DRAGON_HIDE_GROUNDED_DESC = "Скрывать интерфейс после приземления при полной энергии",
     DRAGON_HIDE_COOLDOWN = "Скрывать менеджер перезарядок при полёте",
     DRAGON_HIDE_COOLDOWN_DESC = "Примечание: переключение может не работать в бою, используйте на свой риск.",
+	DRAGON_HIDE_BCM = "Скрыть полосы Трекера Восстановлений, когда Вы на ездовом животном",
+    DRAGON_HIDE_BCM_DESC = "Скрывает индикаторы мощности улучшенного Трекера Восстановлений и дополнительные индикаторы мощности во время небесного полета.",
     DRAGON_SECTION_FEATURES = "ВОЗМОЖНОСТИ",
     DRAGON_SECOND_WIND = "Второе дыхание",
     DRAGON_SECOND_WIND_DESC = "Показывать заряды 'Второго дыхания' в виде подложки",
@@ -242,8 +244,8 @@ ns:RegisterLocale("ruRU", {
     DRAGON_ICON_BORDER_COLOR = "Цвет рамки иконки",
     DRAGON_ICON_BORDER_OPACITY = "Прозрачность рамки иконки",
     DRAGON_ICON_BORDER_SIZE = "Размер рамки иконки",
-    DRAGON_SPEED_TEXT_OFFSET_X = "Смещение текста скорости X",
-    DRAGON_SPEED_TEXT_OFFSET_Y = "Смещение текста скорости Y",
+    DRAGON_SPEED_TEXT_OFFSET_X = "Смещение текста скорости по оси X",
+    DRAGON_SPEED_TEXT_OFFSET_Y = "Смещение текста скорости по оси Y",
 
 	---------------------------------------------------------------------------
     -- EMOTE DETECTION
@@ -697,21 +699,21 @@ ns:RegisterLocale("ruRU", {
     MOUSE_TRAIL_ENABLE = "Включить след курсора",
     MOUSE_TRAIL_DURATION = "Длительность следа",
     MOUSE_TRAIL_COLOR = "Цвет",
-    MOUSE_SECTION_DETECTION = "ОБНАРУЖЕНИЕ",
+	MOUSE_SECTION_DETECTION = "ОБНАРУЖЕНИЕ",
     MOUSE_MELEE_ENABLE = "Включить индикатор ближнего боя",
     MOUSE_RECOLOR_BORDER = "Перекрасить рамку",
     MOUSE_RECOLOR_RING = "Перекрасить кольцо",
     MOUSE_BORDER_ENABLE = "Включить рамку",
     MOUSE_BORDER_COLOR = "Цвет рамки",
     MOUSE_BORDER_WEIGHT = "Толщина рамки",
-    MOUSE_SOUND_ENABLE = "Включить звуковое уведомление",
-    MOUSE_SOUND_INTERVAL = "Интервал повтора (сек)",
-    MOUSE_SPELL_ID = "ID заклинания проверки дальности",
+    MOUSE_SOUND_ENABLE = "Звуковое оповещение",
+    MOUSE_SOUND_INTERVAL = "Интервал повтора (сек.)",
+    MOUSE_SPELL_ID = "ID заклинания для проверки дистанции",
     MOUSE_SPELL_CURRENT = "Текущее: %s",
     MOUSE_SPELL_UNSUPPORTED = "Не поддерживается для этой специализации",
     MOUSE_SPELL_NONE = "Заклинание не настроено",
     MOUSE_RESET_SPELL = "Сбросить по умолчанию",
-    MOUSE_HPAL_NOTE = "Свет-пал использует обнаружение предмета 4yd (~0,5yd погрешность)",
+    MOUSE_HPAL_NOTE = "HPal использует обнаружение объектов на расстоянии 4 ярдов (погрешность составляет ~0.5 ярда)",
 
     ---------------------------------------------------------------------------
     -- CROSSHAIR
