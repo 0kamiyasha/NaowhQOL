@@ -766,6 +766,11 @@ local function InitializeDB()
     -- Point NaowhQOL to the current profile for backwards compatibility
     NaowhQOL = ns.db.profile
 
+    -- Expose the AceDB storage through NaowhQOL_Profiles so other addons
+    -- (e.g. NaowhUI) that read this global can access profiles at runtime.
+    -- Cleared to nil on PLAYER_LOGOUT to avoid duplicating data on disk.
+    NaowhQOL_Profiles = NaowhQOLDB
+
     -- Register profile change callbacks
     ns.db.RegisterCallback(ns, "OnProfileChanged", "OnProfileChanged")
     ns.db.RegisterCallback(ns, "OnProfileCopied", "OnProfileChanged")
@@ -906,6 +911,8 @@ eventFrame:SetScript("OnEvent", function(self, event, name)
         -- Use an empty table (not nil) so other PLAYER_LOGOUT handlers that
         -- index NaowhQOL.xxx don't error from a nil global.
         NaowhQOL = {}
+        -- Clear the runtime alias so NaowhQOLDB data isn't written twice.
+        NaowhQOL_Profiles = nil
     end
 end)
 
