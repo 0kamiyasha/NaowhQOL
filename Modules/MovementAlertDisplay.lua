@@ -250,7 +250,7 @@ local function PlayTimeSpiralAlert(db)
             PlaySoundFile(sound, "Master")
         end
     elseif db.tsTtsEnabled and db.tsTtsMessage then
-        C_VoiceChat.SpeakText(0, db.tsTtsMessage, 1, db.tsTtsVolume or 50, true)
+        C_VoiceChat.SpeakText(db.tsTtsVoiceID or 0, db.tsTtsMessage, 1, db.tsTtsVolume or 50, true)
     end
 end
 
@@ -265,7 +265,7 @@ local function PlayGatewayAlert(db)
             PlaySoundFile(sound, "Master")
         end
     elseif db.gwTtsEnabled and db.gwTtsMessage then
-        C_VoiceChat.SpeakText(0, db.gwTtsMessage, 1, db.gwTtsVolume or 50, true)
+        C_VoiceChat.SpeakText(db.gwTtsVoiceID or 0, db.gwTtsMessage, 1, db.gwTtsVolume or 50, true)
     end
 end
 

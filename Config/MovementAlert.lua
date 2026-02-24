@@ -293,6 +293,10 @@ function ns:InitMovementAlert()
             end
         })
 
+        W:CreateTTSVoicePicker(tsColContent, LT:Col(2), LT:Row(4) + 11, db.tsTtsVoiceID or 0, function(voiceID)
+            db.tsTtsVoiceID = voiceID
+        end)
+
         -- Row 4: TTS Message + TTS Volume
         W:CreateTextInput(tsColContent, {
             label = L["TIME_SPIRAL_TTS_MESSAGE"], db = db, key = "tsTtsMessage",
@@ -392,6 +396,10 @@ function ns:InitMovementAlert()
             template = "ChatConfigCheckButtonTemplate",
             onChange = refreshGateway
         })
+
+        W:CreateTTSVoicePicker(gwColContent, LG:Col(2), LG:Row(3) + 11, db.gwTtsVoiceID or 0, function(voiceID)
+            db.gwTtsVoiceID = voiceID
+        end)
 
         W:CreateTextInput(gwColContent, {
             label = L["GATEWAY_SHARD_TTS_MESSAGE"], db = db, key = "gwTtsMessage",
