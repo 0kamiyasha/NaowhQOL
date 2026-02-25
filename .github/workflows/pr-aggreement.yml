@@ -1,0 +1,29 @@
+name: PR Agreement Check
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  agreement-check:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - name: Validate PR body contains exact agreement line
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python - <<'PY'
+          import os, sys
+
+          body = os.getenv("PR_BODY") or ""
+          lines = [line.strip() for line in body.splitlines()]
+
+          if "I agree" not in lines:
+              print('Missing required agreement line. Please add a line that says exactly: I agree')
+              sys.exit(1)
+
+          print("Agreement line found.")
+          PY

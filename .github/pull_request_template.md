@@ -35,3 +35,12 @@
 
 - [ ] No debug prints or temporary code left in
 - [ ] Localization strings added to `Locales/*` if new text was introduced
+
+## Permission / Contribution Agreement (required)
+By submitting this pull request, you confirm that you have permission to submit these changes to this repository for review.
+
+You also agree that, if this PR is accepted, the maintainers of NaowhQOL may review, modify, merge, and distribute your contribution as part of the project.
+
+Type the following on its own line exactly as written:
+
+I agree
