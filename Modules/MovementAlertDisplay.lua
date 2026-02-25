@@ -263,7 +263,7 @@ local function UpdateCachedCharges()
         if entry.isChargeSpell then
             local chargeInfo = C_Spell.GetSpellCharges(entry.spellId)
             if chargeInfo then
-                cachedChargeCount[entry.spellId] = chargeInfo.currentCharges
+                cachedChargeCount[entry.spellId] = tonumber(chargeInfo.currentCharges) or 0
             end
         end
     end
@@ -304,7 +304,7 @@ local function StartRechargeTimer(entry)
     if duration <= 0 then return end
     rechargeTimers[entry.spellId] = C_Timer.NewTimer(duration, function()
         rechargeTimers[entry.spellId] = nil
-        local cur = cachedChargeCount[entry.spellId] or 0
+        local cur = tonumber(cachedChargeCount[entry.spellId]) or 0
         local max = entry.maxCharges or 1
         cachedChargeCount[entry.spellId] = math.min(cur + 1, max)
         if cachedChargeCount[entry.spellId] < max then
@@ -318,7 +318,7 @@ local function OnChargeSpellUsed(spellId)
     if not inCombat then return end
     for _, entry in ipairs(cachedMovementSpells) do
         if entry.spellId == spellId and entry.isChargeSpell then
-            local cur = cachedChargeCount[spellId]
+            local cur = tonumber(cachedChargeCount[spellId])
             if cur == nil then cur = entry.maxCharges or 1 end
             cachedChargeCount[spellId] = math.max(0, cur - 1)
             if not rechargeTimers[spellId] then
@@ -630,7 +630,7 @@ CheckMovementCooldown = function()
             local showThis = true
 
             if entry.isChargeSpell then
-                local charges = cachedChargeCount[entry.spellId]
+                local charges = tonumber(cachedChargeCount[entry.spellId])
                 if charges == nil then charges = entry.maxCharges or 1 end
                 if charges > 0 then
                     showThis = false
@@ -927,7 +927,7 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
         inCombat = true
         for _, entry in ipairs(cachedMovementSpells) do
             if entry.isChargeSpell then
-                local cur = cachedChargeCount[entry.spellId]
+                local cur = tonumber(cachedChargeCount[entry.spellId])
                 if cur and cur < (entry.maxCharges or 1) and not rechargeTimers[entry.spellId] then
                     StartRechargeTimer(entry)
                 end
