@@ -110,7 +110,6 @@ local movementText = movementFrame:CreateFontString(nil, "OVERLAY")
 movementText:SetFont(ns.DefaultFontPath(), 24, "OUTLINE")
 movementText:SetPoint("CENTER")
 
--- Display pool for stacking multiple cooldowns vertically
 local displayPool = {}
 local activeSlotCount = 0
 
@@ -187,6 +186,8 @@ local movementResizeHandle
 local cachedMovementSpells = {}
 local cachedChargeCount = {}
 local rechargeTimers = {}
+local spellWasCast = {}
+local trackedSpellSet = {}
 local movementCountdownTimer = nil
 local timeSpiralCountdownTimer = nil
 local CheckMovementCooldown
@@ -323,6 +324,10 @@ local function CacheMovementSpells()
     end
 
     cachedMovementSpells = GetPlayerMovementSpells()
+    wipe(trackedSpellSet)
+    for _, entry in ipairs(cachedMovementSpells) do
+        trackedSpellSet[entry.spellId] = true
+    end
     UpdateCachedCharges()
 
     if DEBUG_MODE then
@@ -358,7 +363,9 @@ local function StartRechargeTimer(entry)
     end)
 end
 
-local function OnChargeSpellUsed(spellId)
+local function OnTrackedSpellCast(spellId)
+    if not trackedSpellSet[spellId] then return end
+    spellWasCast[spellId] = true
     if not inCombat then return end
     for _, entry in ipairs(cachedMovementSpells) do
         if entry.spellId == spellId and entry.isChargeSpell then
@@ -691,25 +698,30 @@ CheckMovementCooldown = function()
                   "charge:", entry.isChargeSpell and "yes" or "no")
         end
 
-        if cdInfo and cdInfo.isOnGCD ~= true and cdInfo.timeUntilEndOfStartRecovery then
-            local showThis = true
+        if cdInfo and cdInfo.timeUntilEndOfStartRecovery then
+            if spellWasCast[entry.spellId] then
+                local showThis = true
 
-            if entry.isChargeSpell then
-                local charges = tonumber(cachedChargeCount[entry.spellId])
-                if charges == nil then charges = entry.maxCharges or 1 end
-                if charges > 0 then
-                    showThis = false
+                if entry.isChargeSpell then
+                    local charges = tonumber(cachedChargeCount[entry.spellId])
+                    if charges == nil then charges = entry.maxCharges or 1 end
+                    if charges > 0 then
+                        showThis = false
+                    end
+                end
+
+                if showThis then
+                    count = count + 1
+                    ShowMovementSlot(count, cdInfo, entry)
                 end
             end
-
-            if showThis then
-                count = count + 1
-                ShowMovementSlot(count, cdInfo, entry)
-            end
+        else
+            -- CD ended, clear cast tracking
+            spellWasCast[entry.spellId] = nil
         end
     end
 
-    -- Hide any extra slots from a previous check
+    -- Hide extra slots from previous check
     for i = count + 1, activeSlotCount do
         local slot = displayPool[i]
         if slot then
@@ -1018,16 +1030,17 @@ loader:SetScript("OnEvent", ns.PerfMonitor:Wrap("Movement Alert", function(self,
     elseif event == "PLAYER_REGEN_ENABLED" then
         inCombat = false
         CancelAllRechargeTimers()
+        wipe(spellWasCast)
         CacheMovementSpells()
         CheckMovementCooldown()
         CheckGatewayUsable()
-    elseif event == "SPELL_UPDATE_USABLE" or event == "SPELL_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_CHARGES" then
+    elseif event == "SPELL_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_USABLE" or event == "SPELL_UPDATE_CHARGES" then
         if DEBUG_MODE then print("[MovementAlert] Event:", event) end
         UpdateCachedCharges()
         CheckMovementCooldown()
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
         local _, _, spellId = ...
-        OnChargeSpellUsed(spellId)
+        OnTrackedSpellCast(spellId)
     elseif event == "UNIT_SPELLCAST_SENT" then
         local _, _, _, spellId = ...
         OnSpellCast(spellId)
