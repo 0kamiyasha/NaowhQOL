@@ -217,15 +217,17 @@ local function GetPlayerMovementSpells()
                     seen[spellId] = true
                     local spellInfo = C_Spell.GetSpellInfo(spellId)
                     local chargeInfo = C_Spell.GetSpellCharges(spellId)
+                    local maxCh = chargeInfo and tonumber(chargeInfo.maxCharges) or 1
+                    local rechDur = chargeInfo and tonumber(chargeInfo.cooldownDuration) or 0
                     if spellInfo then
                         table.insert(result, {
                             spellId = spellId,
                             spellName = spellInfo.name,
                             spellIcon = spellInfo.iconID,
                             customText = override and override.customText ~= "" and override.customText or nil,
-                            isChargeSpell = chargeInfo and chargeInfo.maxCharges and chargeInfo.maxCharges > 1 or false,
-                            maxCharges = chargeInfo and chargeInfo.maxCharges or 1,
-                            rechargeDuration = chargeInfo and chargeInfo.cooldownDuration or 0,
+                            isChargeSpell = maxCh > 1,
+                            maxCharges = maxCh,
+                            rechargeDuration = rechDur,
                         })
                     end
                 end
@@ -239,15 +241,17 @@ local function GetPlayerMovementSpells()
                 seen[spellId] = true
                 local spellInfo = C_Spell.GetSpellInfo(spellId)
                 local chargeInfo = C_Spell.GetSpellCharges(spellId)
+                local maxCh = chargeInfo and tonumber(chargeInfo.maxCharges) or 1
+                local rechDur = chargeInfo and tonumber(chargeInfo.cooldownDuration) or 0
                 if spellInfo then
                     table.insert(result, {
                         spellId = spellId,
                         spellName = spellInfo.name,
                         spellIcon = spellInfo.iconID,
                         customText = override.customText ~= "" and override.customText or nil,
-                        isChargeSpell = chargeInfo and chargeInfo.maxCharges and chargeInfo.maxCharges > 1 or false,
-                        maxCharges = chargeInfo and chargeInfo.maxCharges or 1,
-                        rechargeDuration = chargeInfo and chargeInfo.cooldownDuration or 0,
+                        isChargeSpell = maxCh > 1,
+                        maxCharges = maxCh,
+                        rechargeDuration = rechDur,
                     })
                 end
             end
